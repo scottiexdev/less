@@ -2,13 +2,15 @@
 
 A tiny, private web app to cut down on nicotine. Count your pouches or cigarettes each day, set a daily limit, and watch the trend.
 
-**Live:** https://scottiexdev.github.io/nicotine-tracker/
+**Live:** https://scottiexdev.github.io/tracker/
 
 ## Features
 
 - **Pouches and cigarettes** modes, each with its own counter and daily limit
 - **Strength in mg** per pouch (from the can) or per cigarette, so you also get total mg per day
 - **30-day charts**: units per day against your limit, and total nicotine mg per day
+- **Quit plan**: on first launch (or from the *Plan* panel) enter how many you use a day and the date you want to stop by. The app lowers the daily limit in a straight line down to 0 on that date and shows each day's target on a calendar next to what you logged. You can skip it.
+- **Fix past days**: pick a day with the arrows or the date picker above the counter and adjust it with +1 / −
 - 7-day averages and week-over-week change
 - **Installable** and works offline
   - Android (Chrome): menu → *Add to Home screen* / *Install app*
