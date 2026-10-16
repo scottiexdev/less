@@ -1,4 +1,4 @@
-# AddictionTracker
+# Tracker
 
 A tiny, private web app to cut down on nicotine and alcohol. Count your pouches or cigarettes, log your drinks in units, set daily and weekly limits, and watch the trend.
 
