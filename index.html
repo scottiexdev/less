@@ -55,6 +55,9 @@ button:disabled { opacity: .4; cursor: default; }
 .meter { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .meter i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
 .meter.over i { background: var(--over); }
+.daynav { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; }
+.daynav button { font-size: 1.3rem; }
+.daynav input { font: inherit; font-weight: 600; text-align: center; padding: 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
 .btns { display: grid; grid-template-columns: 1fr 2.2fr; gap: 10px; }
 .minus { font-size: 1.8rem; padding: 14px; }
 .plus { font-family: var(--display); font-weight: 700; font-size: 1.2rem; padding: 18px; background: var(--accent); color: var(--surface); border-color: var(--accent); }
@@ -99,6 +102,7 @@ a { color: var(--accent); }
   </div>
 
   <section class="panel today">
+    <div class="daynav"><button id="prevDay" aria-label="Previous day">‹</button><input type="date" id="dayPick" aria-label="Day to edit"><button id="nextDay" aria-label="Next day">›</button></div>
     <div class="big" id="count">0<small>/9</small></div>
     <div class="mgline" id="mgToday">0 mg nicotine today</div>
     <div class="meter" id="meter"><i></i></div>
@@ -150,7 +154,7 @@ a { color: var(--accent); }
     </div>
     <p class="note" id="dataMsg" role="status"></p>
   </section>
-  <p class="note foot"><a href="https://github.com/scottiexdev/nicotine-tracker">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
+  <p class="note foot"><a href="https://github.com/scottiexdev/tracker">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
 </div>
 
 <script>
@@ -165,6 +169,8 @@ const pad = n => String(n).padStart(2, "0");
 const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const r1 = n => Math.round(n * 10) / 10;
 let today = keyOf(new Date());
+let sel = today; // day shown in the counter; can be a past day to fix its count
+const shift = (k, n) => { const x = new Date(k + "T12:00"); x.setDate(x.getDate() + n); return keyOf(x); };
 // day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
 let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5 }, strength: { pouches: 6, cigarettes: 1 }, days: {} };
 
@@ -181,20 +187,22 @@ try {
 const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
 const settingsDoc = () => ({ mode: state.mode, limits: state.limits, strength: state.strength });
 
-const day = () => state.days[today] || { pouches: 0, cigarettes: 0, mg: 0, limits: { ...state.limits } };
+const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: { ...state.limits } };
 const $ = id => document.getElementById(id);
 
 function render() {
-  const m = state.mode, M = MODES[m], d = day(), n = d[m], lim = state.limits[m], over = n > lim;
+  const m = state.mode, M = MODES[m], d = day(), n = d[m], lim = d.limits[m], over = n > lim, when = sel === today ? " today" : "";
   $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
   for (const k in MODES) $("m-" + k).setAttribute("aria-pressed", k === m);
+  $("dayPick").value = sel; $("dayPick").max = today;
+  $("nextDay").disabled = sel >= today;
   $("count").innerHTML = `${n}<small>/${lim}</small>`;
-  $("mgToday").textContent = `${r1(d.mg)} mg nicotine today`;
+  $("mgToday").textContent = `${r1(d.mg)} mg nicotine${when}`;
   $("meter").classList.toggle("over", over);
   $("meter").firstElementChild.style.width = Math.min(100, lim ? n / lim * 100 : 100) + "%";
   const st = $("status");
   st.classList.toggle("over", over);
-  st.textContent = over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left today`;
+  st.textContent = over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left${when}`;
   $("plus").textContent = `+1 ${M.one}`;
   $("minus").disabled = n === 0;
   $("limitOut").textContent = lim;
@@ -252,9 +260,9 @@ function tap(delta) {
   d[m] += delta;
   // shortcut: removing uses today's current strength, so −1 after a strength change is approximate.
   d.mg = Math.max(0, r1(d.mg + delta * state.strength[m]));
-  d.limits = { ...state.limits };
-  state.days[today] = d;
-  render(); persist(today, d);
+  if (sel === today) d.limits = { ...state.limits }; // past days keep the limit they had
+  state.days[sel] = d;
+  render(); persist(sel, d);
 }
 function setLimit(delta) {
   const m = state.mode;
@@ -274,8 +282,12 @@ $("limUp").onclick = () => setLimit(1);
 $("limDown").onclick = () => setLimit(-1);
 $("strUp").onclick = () => setStrength(1);
 $("strDown").onclick = () => setStrength(-1);
+const goTo = k => { sel = k && k < today ? k : today; render(); };
+$("prevDay").onclick = () => goTo(shift(sel, -1));
+$("nextDay").onclick = () => goTo(shift(sel, 1));
+$("dayPick").onchange = e => goTo(e.target.value);
 for (const k in MODES) $("m-" + k).onclick = () => { state.mode = k; render(); persist("settings", settingsDoc()); };
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { today = keyOf(new Date()); render(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (sel === today) sel = keyOf(new Date()); today = keyOf(new Date()); render(); } });
 render();
 
 
@@ -285,7 +297,7 @@ $("export").onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `nicotine-tracker-${today}.json`;
+  a.download = `tracker-backup-${today}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   msg(`Exported ${Object.keys(state.days).length} days.`);
