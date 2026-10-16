@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Nicotine Tracker</title>
-<meta name="description" content="Track daily nicotine pouches and cigarettes, set limits and watch your mg trend. Data stays on your phone.">
+<title>Less</title>
+<meta name="description" content="Track nicotine and alcohol: daily and weekly limits, a plan to quit and your trend. Data stays on your phone.">
 <meta name="theme-color" content="#1f7a5c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Nicotine">
+<meta name="apple-mobile-web-app-title" content="Less">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -43,7 +43,7 @@ button, .filebtn { touch-action: manipulation; -webkit-tap-highlight-color: tran
 button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button:disabled { opacity: .4; cursor: default; }
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.modes { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .modes button { border: 0; padding: 10px; font-weight: 600; background: transparent; color: var(--muted); border-radius: 9px; }
 .modes button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .today { display: grid; gap: 14px; text-align: center; }
@@ -107,22 +107,39 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 .setup input { font: inherit; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
 .acts { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
 .acts button { padding: 12px; font-weight: 600; }
+.stack { display: grid; gap: 14px; }
+.drinks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.drinks button { padding: 10px 8px; text-align: left; line-height: 1.25; }
+.drinks button b { white-space: nowrap; }
+.drinks button span { display: block; font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+.custom { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+.custom label { display: grid; gap: 4px; font-size: .78rem; color: var(--muted); text-align: left; }
+.custom input { font: inherit; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
+.custom button { padding: 10px 14px; font-weight: 600; }
+.dlog { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
+.dlog li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.dlog li span { flex: 1; }
+.dlog li b { font-family: var(--mono); }
+.dlog li button { width: 34px; height: 34px; }
+.meters { display: grid; gap: 6px; text-align: left; font-size: .75rem; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header><h1>Nicotine Tracker</h1><span class="date" id="date"></span></header>
+  <header><h1>Less</h1><span class="date" id="date"></span></header>
 
   <p class="panel install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
 
   <div class="modes" role="group" aria-label="Tracking mode">
     <button id="m-pouches" data-mode="pouches">Pouches</button>
     <button id="m-cigarettes" data-mode="cigarettes">Cigarettes</button>
+    <button id="m-alcohol" data-mode="alcohol">Alcohol</button>
   </div>
 
-  <section class="panel today">
-    <div class="daynav"><button id="prevDay" aria-label="Previous day">‹</button><input type="date" id="dayPick" aria-label="Day to edit"><button id="nextDay" aria-label="Next day">›</button></div>
+  <div class="daynav"><button id="prevDay" aria-label="Previous day">‹</button><input type="date" id="dayPick" aria-label="Day to edit"><button id="nextDay" aria-label="Next day">›</button></div>
+
+  <section class="panel today nic">
     <div class="big" id="count">0<small>/9</small></div>
     <div class="mgline" id="mgToday">0 mg nicotine today</div>
     <div class="meter" id="meter"><i></i></div>
@@ -133,7 +150,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
   </section>
 
-  <section class="panel settings">
+  <section class="panel settings nic">
     <div class="row">
       <label for="limitOut">Daily limit<span class="hint" id="limitHint">pouches per day</span></label>
       <div class="ctl"><button id="limDown" aria-label="Lower limit">−</button><output id="limitOut">9</output><button id="limUp" aria-label="Raise limit">+</button></div>
@@ -144,7 +161,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel nic">
     <h2>Plan <span id="planInfo"></span></h2>
     <div class="calnav"><button id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button id="calNext" aria-label="Next month">›</button></div>
     <div class="cal" id="cal"></div>
@@ -152,7 +169,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     <div class="dbtns" style="margin-top:12px"><button id="planBtn">Make a plan</button><button id="planDel">Remove plan</button></div>
   </section>
 
-  <section class="panel">
+  <section class="panel nic">
     <h2 id="unitTitle">Pouches per day <span>last 30 days</span></h2>
     <svg class="chart" id="unitChart" viewBox="0 0 340 170" role="img" aria-label="Units per day"></svg>
     <div class="stats">
@@ -162,7 +179,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel nic">
     <h2>Nicotine per day <span>mg, pouches + cigarettes</span></h2>
     <svg class="chart" id="mgChart" viewBox="0 0 340 170" role="img" aria-label="Milligrams of nicotine per day"></svg>
     <div class="stats">
@@ -172,9 +189,51 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
     <p class="empty" id="empty">The charts fill in as you log. Each day you tap +1 becomes a bar; the dashed line is that day's limit.</p>
   </section>
+  <div class="stack" id="alc" hidden>
+    <section class="panel today">
+      <div class="big" id="units">0<small>/4</small></div>
+      <div class="mgline" id="wkLine">units today</div>
+      <div class="meters">
+        <span>Day</span><div class="meter" id="dMeter"><i></i></div>
+        <span>Week (Mon–Sun)</span><div class="meter" id="wMeter"><i></i></div>
+      </div>
+      <div class="status" id="aStatus" role="status"></div>
+      <div class="drinks" id="drinkBtns"></div>
+      <form class="custom" id="custom">
+        <label>Amount, ml<input type="number" id="cMl" min="1" max="5000" step="1" inputmode="numeric" required></label>
+        <label>Strength, % ABV<input type="number" id="cAbv" min="0.1" max="100" step="0.1" inputmode="decimal" required></label>
+        <button>Add</button>
+      </form>
+      <ul class="dlog" id="dlog"></ul>
+      <button id="dryDay" style="padding:12px;font-weight:600">Mark as a dry day</button>
+    </section>
+
+    <section class="panel settings">
+      <div class="row">
+        <label for="aLimOut">Daily limit<span class="hint">units per day</span></label>
+        <div class="ctl"><button id="aLimDown" aria-label="Lower daily limit">−</button><output id="aLimOut">4</output><button id="aLimUp" aria-label="Raise daily limit">+</button></div>
+      </div>
+      <div class="row">
+        <label for="wLimOut">Weekly limit<span class="hint">units Mon–Sun; UK advice is 14 at most</span></label>
+        <div class="ctl"><button id="wLimDown" aria-label="Lower weekly limit">−</button><output id="wLimOut">14</output><button id="wLimUp" aria-label="Raise weekly limit">+</button></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Alcohol units per day <span>last 30 days</span></h2>
+      <svg class="chart" id="alcChart" viewBox="0 0 340 170" role="img" aria-label="Alcohol units per day"></svg>
+      <div class="stats">
+        <div class="stat"><b id="wkNow">–</b><span>This week</span></div>
+        <div class="stat"><b id="wkPrev">–</b><span>Last week</span></div>
+        <div class="stat"><b id="dryN">–</b><span>Dry days, 30d</span></div>
+      </div>
+      <p class="note" style="margin-top:10px">1 unit = 10 ml of pure alcohol: ml × % ÷ 1000.</p>
+    </section>
+  </div>
+
   <section class="panel data">
     <h2>Your data <span>stays in this browser</span></h2>
-    <p class="empty" style="margin:0 0 12px">Nothing is sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
+    <p class="empty" style="margin:0 0 12px">What you log is never sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
     <div class="dbtns">
       <button id="export">Export backup</button>
       <label class="filebtn" for="import">Import backup</label>
@@ -182,12 +241,12 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
     <p class="note" id="dataMsg" role="status"></p>
   </section>
-  <p class="note foot"><a href="https://github.com/scottiexdev/tracker">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
+  <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
 </div>
 
 <dialog id="setup">
   <form method="dialog" class="setup">
-    <h2>Make a plan <span>you can skip this</span></h2>
+    <h2>Plan to quit nicotine <span>you can skip this</span></h2>
     <p class="empty" style="margin:0">Tell the app how much you use now and when you want to stop. It lowers your daily limit a little at a time until that day.</p>
     <div class="modes" role="group" aria-label="What do you use">
       <button type="button" data-smode="pouches">Pouches</button><button type="button" data-smode="cigarettes">Cigarettes</button>
@@ -199,6 +258,8 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 </dialog>
 
 <script>
+// Visit counter: sign up at goatcounter.com (free, no cookies) and put your site code here, e.g. "scottiex-less". Empty = no counting.
+const GOATCOUNTER = "";
 // Your donation page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors…). Leave empty to hide the link.
 const DONATE_URL = "";
 const LS = "nicotine-v2";
@@ -215,16 +276,25 @@ const shift = (k, n) => { const x = new Date(k + "T12:00"); x.setDate(x.getDate(
 const daysBetween = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
 let cal = today.slice(0, 7); // month shown in the plan calendar
 // day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
-let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5 }, strength: { pouches: 6, cigarettes: 1 }, days: {} };
+let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5, alcohol: 4 }, weekly: 14, strength: { pouches: 6, cigarettes: 1 }, days: {} };
+const TABS = [...Object.keys(MODES), "alcohol"];
+// UK units: ml × ABV% ÷ 1000.
+const DRINKS = [["Pint of beer", 568, 4], ["Can of beer", 440, 5], ["Bottle of beer", 330, 5], ["Small wine", 125, 12],
+  ["Glass of wine", 175, 12], ["Large wine", 250, 12], ["Single spirit", 25, 40], ["Alcopop", 275, 5]];
+const unitsOf = (ml, abv) => Math.round(ml * abv / 10) / 100;
+const units = r => r && r.drinks ? r.drinks.reduce((t, x) => t + x.u, 0) : 0;
+const esc = t => String(t).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
 
 // Days from v1 ({count, limit}) were all 6 mg pouches.
 const norm = v => v && "count" in v && !("pouches" in v)
   ? { pouches: v.count, cigarettes: 0, mg: v.count * 6, limits: { pouches: v.limit, cigarettes: 5 } }
-  : { pouches: v.pouches || 0, cigarettes: v.cigarettes || 0, mg: v.mg || 0, limits: { ...state.limits, ...(v.limits || {}) } };
+  : { pouches: v.pouches || 0, cigarettes: v.cigarettes || 0, mg: v.mg || 0, limits: { ...state.limits, ...(v.limits || {}) },
+      drinks: (Array.isArray(v.drinks) ? v.drinks : []).filter(x => x && typeof x.n === "string" && x.u >= 0 && x.u <= 100).map(x => ({ n: x.n.slice(0, 60), u: +x.u })),
+      dry: v.dry === true };
 
 try {
   const s = JSON.parse(localStorage.getItem(LS));
-  if (s && s.days) state = { ...state, ...s };
+  if (s && s.days) state = { ...state, ...s, limits: { ...state.limits, ...s.limits } };
   else { const old = JSON.parse(localStorage.getItem("pouches-v1")); if (old && old.days) { state.limits.pouches = old.limit; for (const k in old.days) state.days[k] = norm(old.days[k]); } }
 } catch {}
 const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
@@ -244,11 +314,15 @@ const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits:
 const $ = id => document.getElementById(id);
 
 function render() {
-  const m = state.mode, M = MODES[m], d = day(), n = d[m], lim = d.limits[m], over = n > lim, when = sel === today ? " today" : "";
+  const m = state.mode;
   $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-  for (const k in MODES) $("m-" + k).setAttribute("aria-pressed", k === m);
+  for (const k of TABS) $("m-" + k).setAttribute("aria-pressed", k === m);
   $("dayPick").value = sel; $("dayPick").max = today;
   $("nextDay").disabled = sel >= today;
+  for (const el of document.querySelectorAll(".nic")) el.hidden = m === "alcohol";
+  $("alc").hidden = m !== "alcohol";
+  if (m === "alcohol") return renderAlcohol();
+  const M = MODES[m], d = day(), n = d[m], lim = d.limits[m], over = n > lim, when = sel === today ? " today" : "";
   $("count").innerHTML = `${n}<small>/${lim}</small>`;
   $("mgToday").textContent = `${r1(d.mg)} mg nicotine${when}`;
   $("meter").classList.toggle("over", over);
@@ -277,7 +351,7 @@ function renderCal() {
   $("calTitle").textContent = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   let s = ["M", "T", "W", "T", "F", "S", "S"].map(w => `<span class="wd">${w}</span>`).join("") + "<span></span>".repeat((first.getDay() + 6) % 7);
   for (let i = 1; i <= n; i++) {
-    const k = `${cal}-${pad(i)}`, r = state.days[k], v = r && r[m], t = planned(k, m);
+    const k = `${cal}-${pad(i)}`, r = nicRow(state.days[k]), v = r && r[m], t = planned(k, m);
     const cls = [r ? (v > r.limits[m] ? "over" : "ok") : "", k === today ? "today" : "", k === sel ? "sel" : ""].join(" ");
     s += `<button class="cd ${cls}" data-k="${k}"${k > today ? " disabled" : ""} aria-label="${k}${r ? `, ${v} logged` : ""}${t != null ? `, plan ${t}` : ""}"><i>${i}</i><b>${r ? v : ""}</b><small>${t != null ? "→" + t : ""}</small></button>`;
   }
@@ -304,10 +378,43 @@ function chart(svg, rows, dates, valueOf, limitOf, color) {
   svg.innerHTML = s;
 }
 
+// A day holding only drinks is not a nicotine day.
+const nicRow = r => r && (r.pouches || r.cigarettes || !(r.drinks?.length || r.dry)) ? r : undefined;
+const last30 = () => { const dates = []; for (let i = 29; i >= 0; i--) dates.push(shift(today, -i)); return dates; };
+const weekUnits = k => { const x = new Date(k + "T12:00"), mon = shift(k, -((x.getDay() + 6) % 7)); let t = 0; for (let i = 0; i < 7; i++) t += units(state.days[shift(mon, i)]); return t; };
+
+function renderAlcohol() {
+  const d = day(), u = units(d), lim = d.limits.alcohol ?? state.limits.alcohol, W = state.weekly, wk = weekUnits(sel);
+  const when = sel === today ? " today" : "", drinks = d.drinks || [];
+  $("units").innerHTML = `${r1(u)}<small>/${lim}</small>`;
+  $("wkLine").textContent = `units${when} · ${r1(wk)} of ${W} this week`;
+  for (const [id, v, l] of [["dMeter", u, lim], ["wMeter", wk, W]]) {
+    $(id).classList.toggle("over", v > 0 && v >= l);
+    $(id).firstElementChild.style.width = Math.min(100, l ? v / l * 100 : 100) + "%";
+  }
+  // Warn as soon as a limit is reached, not only once it is passed.
+  const warn = [];
+  if (u > 0 && u >= lim) warn.push(u > lim ? `${r1(u - lim)} units over the daily limit` : "Daily limit reached");
+  if (wk > 0 && wk >= W) warn.push(wk > W ? `${r1(wk - W)} units over the weekly limit` : "Weekly limit reached");
+  const st = $("aStatus");
+  st.classList.toggle("over", warn.length > 0);
+  st.textContent = warn.length ? "⚠ " + warn.join(" · ") : d.dry ? "Dry day ✓" : `${r1(lim - u)} units left${when}`;
+  $("dlog").innerHTML = drinks.map((x, i) => `<li><span>${esc(x.n)}</span><b>${r1(x.u)} u</b><button data-i="${i}" aria-label="Remove ${esc(x.n)}">×</button></li>`).join("");
+  $("dryDay").hidden = drinks.length > 0;
+  $("dryDay").textContent = d.dry ? "Dry day ✓ · tap to undo" : "Mark as a dry day";
+  $("aLimOut").textContent = state.limits.alcohol;
+  $("wLimOut").textContent = W;
+
+  const dates = last30(), rows = dates.map(k => { const r = state.days[k]; return r && (r.drinks?.length || r.dry) ? r : null; });
+  chart($("alcChart"), rows, dates, units, r => r.limits.alcohol ?? state.limits.alcohol, (v, l) => v > l ? "var(--over)" : "var(--mg)");
+  $("wkNow").textContent = r1(weekUnits(today));
+  $("wkPrev").textContent = r1(weekUnits(shift(today, -7)));
+  $("dryN").textContent = rows.filter(r => r && r.dry).length;
+}
+
 function renderCharts() {
-  const m = state.mode, dates = [];
-  for (let i = 29; i >= 0; i--) { const x = new Date(); x.setDate(x.getDate() - i); dates.push(keyOf(x)); }
-  const rows = dates.map(k => state.days[k]);
+  const m = state.mode, dates = last30();
+  const rows = dates.map(k => nicRow(state.days[k]));
   chart($("unitChart"), rows, dates, r => r[m], r => r.limits[m], (v, lim) => v > lim ? "var(--over)" : "var(--accent)");
   chart($("mgChart"), rows, dates, r => r.mg, null, "var(--mg)");
   const avg = (arr, f) => { const a = arr.filter(Boolean); return a.length ? a.reduce((t, r) => t + f(r), 0) / a.length : null; };
@@ -357,8 +464,25 @@ const goTo = k => { sel = k && k < today ? k : today; cal = sel.slice(0, 7); ren
 $("prevDay").onclick = () => goTo(shift(sel, -1));
 $("nextDay").onclick = () => goTo(shift(sel, 1));
 $("dayPick").onchange = e => goTo(e.target.value);
-for (const k in MODES) $("m-" + k).onclick = () => { state.mode = k; render(); persist("settings", settingsDoc()); };
+for (const k of TABS) $("m-" + k).onclick = () => { state.mode = k; render(); persist("settings", settingsDoc()); };
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (sel === today) sel = keyOf(new Date()); today = keyOf(new Date()); render(); } });
+function editDay(f) {
+  const d = structuredClone(day());
+  f(d);
+  if (sel === today) d.limits = limitsOn(today);
+  state.days[sel] = d; saveLocal(); render();
+}
+const addDrink = (n, ml, abv) => editDay(d => { d.drinks = [...(d.drinks || []), { n, u: unitsOf(ml, abv) }]; d.dry = false; });
+$("drinkBtns").innerHTML = DRINKS.map(([n, ml, abv], i) => `<button data-i="${i}">${n} · <b>${r1(unitsOf(ml, abv))} u</b><span>${ml} ml · ${abv}%</span></button>`).join("");
+$("drinkBtns").onclick = e => { const b = e.target.closest("button"); if (b) { const [n, ml, abv] = DRINKS[b.dataset.i]; addDrink(`${n} ${abv}%`, ml, abv); } };
+$("custom").onsubmit = e => { e.preventDefault(); const ml = +$("cMl").value, abv = +$("cAbv").value; addDrink(`${ml} ml at ${abv}%`, ml, abv); e.target.reset(); };
+$("dlog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.drinks.splice(+b.dataset.i, 1)); };
+$("dryDay").onclick = () => editDay(d => { d.dry = !d.dry; });
+$("aLimUp").onclick = () => setLimit(1);
+$("aLimDown").onclick = () => setLimit(-1);
+const setWeekly = delta => { state.weekly = Math.max(0, Math.min(100, state.weekly + delta)); saveLocal(); render(); };
+$("wLimUp").onclick = () => setWeekly(1);
+$("wLimDown").onclick = () => setWeekly(-1);
 const moveCal = n => { const [y, m] = cal.split("-").map(Number); cal = keyOf(new Date(y, m - 1 + n, 1)).slice(0, 7); renderCal(); };
 $("calPrev").onclick = () => moveCal(-1);
 $("calNext").onclick = () => moveCal(1);
@@ -370,7 +494,7 @@ let smode;
 const markSmode = () => document.querySelectorAll("[data-smode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.smode === smode));
 document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); });
 function openSetup() {
-  smode = state.plan?.mode || state.mode; markSmode();
+  smode = state.plan?.mode || (MODES[state.mode] ? state.mode : "pouches"); markSmode();
   $("sFrom").value = state.plan?.from || state.limits[smode];
   $("sEnd").min = shift(today, 1);
   $("sEnd").value = state.plan?.end > today ? state.plan.end : shift(today, 56);
@@ -394,7 +518,7 @@ $("export").onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `tracker-backup-${today}.json`;
+  a.download = `less-backup-${today}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   msg(`Exported ${Object.keys(state.days).length} days.`);
@@ -409,12 +533,17 @@ $("import").onchange = async e => {
     for (const k in s.days) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) days[k] = norm(s.days[k]);
     const p = s.plan, D = /^\d{4}-\d{2}-\d{2}$/;
     const plan = p && MODES[p.mode] && D.test(p.start) && D.test(p.end) && p.end > p.start && +p.from > 0 ? { mode: p.mode, from: Math.round(+p.from), start: p.start, end: p.end } : state.plan;
-    state = { ...state, plan, mode: MODES[s.mode] ? s.mode : state.mode, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
+    state = { ...state, plan, mode: TABS.includes(s.mode) ? s.mode : state.mode, weekly: s.weekly >= 0 && s.weekly <= 100 ? +s.weekly : state.weekly, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
     saveLocal(); render();
     msg(`Imported ${Object.keys(days).length} days.`);
-  } catch { msg("That file isn't a Nicotine Tracker backup."); }
+  } catch { msg("That file isn't a Less backup."); }
 };
 
+if (GOATCOUNTER) {
+  const g = document.createElement("script");
+  g.async = true; g.src = "https://gc.zgo.at/count.js"; g.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
+  document.head.append(g);
+}
 if (DONATE_URL) { $("donate").href = DONATE_URL; $("donate").hidden = false; }
 // iOS Safari: suggest installing, since non-installed sites can lose localStorage after 7 idle days.
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);

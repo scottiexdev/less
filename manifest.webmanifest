@@ -1,7 +1,7 @@
 {
-  "name": "Nicotine Tracker",
-  "short_name": "Nicotine",
-  "description": "Track daily nicotine pouches and cigarettes, set limits and watch your mg trend.",
+  "name": "Less",
+  "short_name": "Less",
+  "description": "Track nicotine and alcohol: daily and weekly limits, a plan to quit and your trend.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
