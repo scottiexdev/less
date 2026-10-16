@@ -1,11 +1,12 @@
-# Nicotine Tracker
+# AddictionTracker
 
-A tiny, private web app to cut down on nicotine. Count your pouches or cigarettes each day, set a daily limit, and watch the trend.
+A tiny, private web app to cut down on nicotine and alcohol. Count your pouches or cigarettes, log your drinks in units, set daily and weekly limits, and watch the trend.
 
 **Live:** https://scottiexdev.github.io/tracker/
 
 ## Features
 
+- **Alcohol**: tap a drink (pint, can, glass of wine, spirit…) or enter ml and % ABV, and it is converted to UK units (ml × % ÷ 1000). Daily and weekly (Monday–Sunday) limits, with a warning as soon as either is reached. Mark dry days and see them counted over 30 days.
 - **Pouches and cigarettes** modes, each with its own counter and daily limit
 - **Strength in mg** per pouch (from the can) or per cigarette, so you also get total mg per day
 - **30-day charts**: units per day against your limit, and total nicotine mg per day
@@ -19,7 +20,7 @@ A tiny, private web app to cut down on nicotine. Count your pouches or cigarette
 
 ## Privacy
 
-There is no server and no account. Everything is stored in your browser's `localStorage` on your device. Use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
+There is no server and no account. What you log never leaves the device. Everything is stored in your browser's `localStorage` on your device. Use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
 
 ## Notes on the numbers
 
@@ -38,6 +39,10 @@ It's plain HTML, CSS and JavaScript with no build step. Serve the folder with an
 ## Setting up the donation link
 
 Open `index.html`, find `const DONATE_URL = "";` near the top of the script and paste your page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors). The "Support this app" link appears in the footer only when it's set. Replace `DONATE_LINK_HERE` above with the same URL.
+
+## Counting visitors
+
+Off by default. To see roughly how many people use the app, create a free site at [GoatCounter](https://www.goatcounter.com) (no cookies, no personal data) and put its code in `const GOATCOUNTER = "";` in `index.html`. Only the page visit is counted, never what anyone logs. Visits while offline aren't counted.
 
 ## License
 
