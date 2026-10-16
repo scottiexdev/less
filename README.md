@@ -6,7 +6,7 @@ A tiny, private web app to cut down on nicotine and alcohol. Count your pouches 
 
 ## Features
 
-- **Pick what you track**: the first screen asks "Less of what?" (pouches, cigarettes, alcohol); only those get a tab. Change it later in *Settings*.
+- **Pick what you track**: the first screen asks "Less of what?" (pouches, cigarettes, alcohol); only those get a tab. Change it later in *Settings* (⚙ next to the date).
 - **Money saved**: enter the price of a can, a pack or an alcohol unit and how much you used before (pre-filled from a quit plan). Saved = (before − logged) × price, every day since a start date, per tracker and in total.
 - **Measures**: drink volumes in ml, litres or US fl oz. Alcohol is always counted in UK units.
 - **Alcohol**: tap a drink (pint, can, glass of wine, spirit…) or enter ml and % ABV, and it is converted to UK units (ml × % ÷ 1000). Daily and weekly (Monday–Sunday) limits, with a warning as soon as either is reached. Mark dry days and see them counted over 30 days.
