@@ -122,6 +122,18 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 .dlog li b { font-family: var(--mono); }
 .dlog li button { width: 34px; height: 34px; }
 .meters { display: grid; gap: 6px; text-align: left; font-size: .75rem; color: var(--muted); }
+.big.money { font-size: 3rem; }
+summary { font-family: var(--display); font-weight: 700; font-size: 1rem; cursor: pointer; }
+.prefs { display: grid; gap: 14px; margin-top: 14px; }
+.prefs label { display: grid; gap: 4px; font-size: .78rem; color: var(--muted); }
+.prefs input, .prefs select { font: inherit; font-size: 14px; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
+.prefs .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.prefs fieldset { margin: 0; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-items: end; }
+.prefs fieldset.alc { grid-template-columns: 1fr 1fr; }
+.prefs .chk { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--fg); }
+.prefs .chk input { width: 18px; height: 18px; margin: 0; }
+.prefs legend { font-weight: 600; padding: 0 4px; }
+.prefs .hint { grid-column: 1 / -1; font-size: .75rem; color: var(--muted); margin: 0; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -131,7 +143,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 
   <p class="panel install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
 
-  <div class="modes" role="group" aria-label="Tracking mode">
+  <div class="modes" id="tabs" role="group" aria-label="Tracking mode">
     <button id="m-pouches" data-mode="pouches">Pouches</button>
     <button id="m-cigarettes" data-mode="cigarettes">Cigarettes</button>
     <button id="m-alcohol" data-mode="alcohol">Alcohol</button>
@@ -200,7 +212,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
       <div class="status" id="aStatus" role="status"></div>
       <div class="drinks" id="drinkBtns"></div>
       <form class="custom" id="custom">
-        <label>Amount, ml<input type="number" id="cMl" min="1" max="5000" step="1" inputmode="numeric" required></label>
+        <label><span>Amount, <span id="cUnit">ml</span></span><input type="number" id="cMl" min="1" max="5000" step="1" inputmode="decimal" required></label>
         <label>Strength, % ABV<input type="number" id="cAbv" min="0.1" max="100" step="0.1" inputmode="decimal" required></label>
         <button>Add</button>
       </form>
@@ -231,6 +243,45 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </section>
   </div>
 
+  <section class="panel today">
+    <h2>Money saved <span id="moneySince"></span></h2>
+    <div class="big money" id="saved"></div>
+    <div class="stats" id="moneyRows"></div>
+    <p class="empty" id="moneyEmpty">Add prices and how much you used before in Settings to see what you save.</p>
+  </section>
+
+  <details class="panel">
+    <summary>Settings</summary>
+    <form class="prefs" id="prefs" onsubmit="return false">
+      <div class="two">
+        <label>Measures<select id="pMeasure"><option value="ml">Metric, ml</option><option value="l">Metric, litres</option><option value="floz">US, fl oz</option></select></label>
+        <label>Currency<select id="pCur"></select></label>
+      </div>
+      <fieldset><legend>Less of</legend>
+        <label class="chk"><input type="checkbox" id="t-pouches">Pouches</label>
+        <label class="chk"><input type="checkbox" id="t-cigarettes">Cigarettes</label>
+        <label class="chk"><input type="checkbox" id="t-alcohol">Alcohol</label>
+      </fieldset>
+      <label>Count money saved from<input type="date" id="pSince"></label>
+      <fieldset><legend>Pouches</legend>
+        <label>Price of a can<input type="number" id="f-pouches-price" min="0" step="0.01" inputmode="decimal"></label>
+        <label>Pouches in a can<input type="number" id="f-pouches-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
+        <label>A day, before<input type="number" id="f-pouches-before" min="0" step="1" inputmode="numeric"></label>
+      </fieldset>
+      <fieldset><legend>Cigarettes</legend>
+        <label>Price of a pack<input type="number" id="f-cigarettes-price" min="0" step="0.01" inputmode="decimal"></label>
+        <label>Cigarettes in a pack<input type="number" id="f-cigarettes-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
+        <label>A day, before<input type="number" id="f-cigarettes-before" min="0" step="1" inputmode="numeric"></label>
+      </fieldset>
+      <fieldset class="alc"><legend>Alcohol</legend>
+        <label>Price of a unit<input type="number" id="f-alcohol-price" min="0" step="0.01" inputmode="decimal"></label>
+        <label>Units a week, before<input type="number" id="f-alcohol-before" min="0" step="1" inputmode="numeric"></label>
+        <p class="hint">A 5.00 pint of beer is 2.3 units, so about 2.20 a unit.</p>
+      </fieldset>
+      <p class="hint" style="margin:0">Saved = (what you used before − what you log) × price, every day since the date above. A day with nothing logged counts as none used. "Before" for the tracker with a quit plan starts from the plan.</p>
+    </form>
+  </details>
+
   <section class="panel data">
     <h2>Your data <span>stays in this browser</span></h2>
     <p class="empty" style="margin:0 0 12px">What you log is never sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
@@ -246,6 +297,15 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 
 <dialog id="setup">
   <form method="dialog" class="setup">
+   <div class="setup" id="stepWhat">
+    <h2>Less of what? <span>pick one or more</span></h2>
+    <div class="modes" role="group" aria-label="What do you want less of">
+      <button type="button" data-what="pouches">Pouches</button><button type="button" data-what="cigarettes">Cigarettes</button><button type="button" data-what="alcohol">Alcohol</button>
+    </div>
+    <p class="empty" style="margin:0">Only these get a tab. You can change it later in Settings.</p>
+    <div class="acts"><button value="skip" formnovalidate>Skip</button><button type="button" class="plus" id="whatNext">Next</button></div>
+   </div>
+   <div class="setup" id="stepPlan">
     <h2>Plan to quit nicotine <span>you can skip this</span></h2>
     <p class="empty" style="margin:0">Tell the app how much you use now and when you want to stop. It lowers your daily limit a little at a time until that day.</p>
     <div class="modes" role="group" aria-label="What do you use">
@@ -254,6 +314,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     <label>How many a day now?<input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required></label>
     <label>Stop by<input type="date" id="sEnd" required></label>
     <div class="acts"><button value="skip" formnovalidate>Skip</button><button class="plus" value="plan">Create plan</button></div>
+   </div>
   </form>
 </dialog>
 
@@ -276,8 +337,19 @@ const shift = (k, n) => { const x = new Date(k + "T12:00"); x.setDate(x.getDate(
 const daysBetween = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
 let cal = today.slice(0, 7); // month shown in the plan calendar
 // day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
-let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5, alcohol: 4 }, weekly: 14, strength: { pouches: 6, cigarettes: 1 }, days: {} };
+let state = { tabs: ["pouches", "cigarettes", "alcohol"], measure: "ml", money: {}, mode: "pouches", limits: { pouches: 9, cigarettes: 5, alcohol: 4 }, weekly: 14, strength: { pouches: 6, cigarettes: 1 }, days: {} };
 const TABS = [...Object.keys(MODES), "alcohol"];
+// Volume shown to the user: ml per unit, label, decimals. Drinks are stored in ml.
+const VOL = { ml: [1, "ml", 0], l: [1000, "L", 3], floz: [29.5735, "fl oz", 1] };
+const vol = ml => { const [f, u, dp] = VOL[state.measure]; return `${+(ml / f).toFixed(dp)} ${u}`; };
+const CURRENCIES = ["EUR", "GBP", "USD", "CHF", "SEK", "NOK", "DKK", "PLN", "CAD", "AUD"];
+const num = (v, max) => { v = +v; return v > 0 && v <= max ? v : undefined; };
+// Used for the settings form and for imported backups alike.
+const cleanMoney = x => ({
+  currency: CURRENCIES.includes(x?.currency) ? x.currency : "EUR",
+  since: /^\d{4}-\d{2}-\d{2}$/.test(x?.since) && x.since >= "2000-01-01" ? x.since : undefined,
+  ...Object.fromEntries(TABS.map(m => [m, { price: num(x?.[m]?.price, 1000), per: num(x?.[m]?.per, 1000), before: num(x?.[m]?.before, 1000) }])),
+});
 // UK units: ml × ABV% ÷ 1000.
 const DRINKS = [["Pint of beer", 568, 4], ["Can of beer", 440, 5], ["Bottle of beer", 330, 5], ["Small wine", 125, 12],
   ["Glass of wine", 175, 12], ["Large wine", 250, 12], ["Single spirit", 25, 40], ["Alcopop", 275, 5]];
@@ -297,6 +369,10 @@ try {
   if (s && s.days) state = { ...state, ...s, limits: { ...state.limits, ...s.limits } };
   else { const old = JSON.parse(localStorage.getItem("pouches-v1")); if (old && old.days) { state.limits.pouches = old.limit; for (const k in old.days) state.days[k] = norm(old.days[k]); } }
 } catch {}
+state.money = cleanMoney(state.money);
+if (!VOL[state.measure]) state.measure = "ml";
+const cleanTabs = t => Array.isArray(t) && TABS.filter(m => t.includes(m));
+if (!cleanTabs(state.tabs)?.length) state.tabs = [...TABS]; else state.tabs = cleanTabs(state.tabs);
 const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
 const settingsDoc = () => ({ mode: state.mode, limits: state.limits, strength: state.strength });
 
@@ -316,9 +392,12 @@ const $ = id => document.getElementById(id);
 function render() {
   const m = state.mode;
   $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
-  for (const k of TABS) $("m-" + k).setAttribute("aria-pressed", k === m);
+  if (!state.tabs.includes(m)) return state.mode = state.tabs[0], render();
+  for (const k of TABS) { $("m-" + k).setAttribute("aria-pressed", k === m); $("m-" + k).hidden = !state.tabs.includes(k); $(`f-${k}-price`).closest("fieldset").hidden = !state.tabs.includes(k); }
+  $("tabs").hidden = state.tabs.length < 2;
   $("dayPick").value = sel; $("dayPick").max = today;
   $("nextDay").disabled = sel >= today;
+  renderMoney();
   for (const el of document.querySelectorAll(".nic")) el.hidden = m === "alcohol";
   $("alc").hidden = m !== "alcohol";
   if (m === "alcohol") return renderAlcohol();
@@ -383,8 +462,37 @@ const nicRow = r => r && (r.pouches || r.cigarettes || !(r.drinks?.length || r.d
 const last30 = () => { const dates = []; for (let i = 29; i >= 0; i--) dates.push(shift(today, -i)); return dates; };
 const weekUnits = k => { const x = new Date(k + "T12:00"), mon = shift(k, -((x.getDay() + 6) % 7)); let t = 0; for (let i = 0; i < 7; i++) t += units(state.days[shift(mon, i)]); return t; };
 
+const beforeOf = m => state.money[m].before ?? (state.plan?.mode === m ? state.plan.from : undefined);
+const sinceOf = () => state.money.since || state.plan?.start || today;
+function saved() {
+  const out = {};
+  for (const m of state.tabs) {
+    const c = state.money[m], before = beforeOf(m), alc = m === "alcohol", price = alc ? c.price : c.price / (c.per || 20);
+    if (!price || !before) continue;
+    let t = 0;
+    for (let k = sinceOf(); k <= today; k = shift(k, 1)) { const r = state.days[k]; t += ((alc ? before / 7 : before) - (alc ? units(r) : r ? r[m] : 0)) * price; }
+    out[m] = t;
+  }
+  return out;
+}
+function renderMoney() {
+  const s = saved(), keys = Object.keys(s), cur = new Intl.NumberFormat("en-GB", { style: "currency", currency: state.money.currency });
+  const fmt = v => (v < -0.005 ? "−" : "") + cur.format(Math.abs(v));
+  $("moneyEmpty").hidden = keys.length > 0;
+  $("saved").hidden = !keys.length;
+  $("moneyRows").hidden = keys.length < 2;
+  $("saved").textContent = fmt(keys.reduce((t, k) => t + s[k], 0));
+  $("moneySince").textContent = keys.length ? `since ${new Date(sinceOf() + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "";
+  $("moneyRows").innerHTML = keys.map(k => `<div class="stat"><b>${fmt(s[k])}</b><span>${k}</span></div>`).join("");
+}
+
 function renderAlcohol() {
-  const d = day(), u = units(d), lim = d.limits.alcohol ?? state.limits.alcohol, W = state.weekly, wk = weekUnits(sel);
+  const [vf, vu, vdp] = VOL[state.measure];
+  $("cUnit").textContent = vu;
+  Object.assign($("cMl"), { step: 10 ** -vdp, min: 10 ** -vdp, max: Math.round(5000 / vf) });
+  $("drinkBtns").innerHTML = DRINKS.map(([n, ml, abv], i) => `<button data-i="${i}">${n} · <b>${r1(unitsOf(ml, abv))} u</b><span>${vol(ml)} · ${abv}%</span></button>`).join("");
+  // Rounded first, so the warnings agree with the numbers on screen.
+  const d = day(), u = r1(units(d)), lim = d.limits.alcohol ?? state.limits.alcohol, W = state.weekly, wk = r1(weekUnits(sel));
   const when = sel === today ? " today" : "", drinks = d.drinks || [];
   $("units").innerHTML = `${r1(u)}<small>/${lim}</small>`;
   $("wkLine").textContent = `units${when} · ${r1(wk)} of ${W} this week`;
@@ -473,9 +581,8 @@ function editDay(f) {
   state.days[sel] = d; saveLocal(); render();
 }
 const addDrink = (n, ml, abv) => editDay(d => { d.drinks = [...(d.drinks || []), { n, u: unitsOf(ml, abv) }]; d.dry = false; });
-$("drinkBtns").innerHTML = DRINKS.map(([n, ml, abv], i) => `<button data-i="${i}">${n} · <b>${r1(unitsOf(ml, abv))} u</b><span>${ml} ml · ${abv}%</span></button>`).join("");
 $("drinkBtns").onclick = e => { const b = e.target.closest("button"); if (b) { const [n, ml, abv] = DRINKS[b.dataset.i]; addDrink(`${n} ${abv}%`, ml, abv); } };
-$("custom").onsubmit = e => { e.preventDefault(); const ml = +$("cMl").value, abv = +$("cAbv").value; addDrink(`${ml} ml at ${abv}%`, ml, abv); e.target.reset(); };
+$("custom").onsubmit = e => { e.preventDefault(); const ml = +$("cMl").value * VOL[state.measure][0], abv = +$("cAbv").value; addDrink(`${vol(ml)} at ${abv}%`, ml, abv); e.target.reset(); };
 $("dlog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.drinks.splice(+b.dataset.i, 1)); };
 $("dryDay").onclick = () => editDay(d => { d.dry = !d.dry; });
 $("aLimUp").onclick = () => setLimit(1);
@@ -493,24 +600,53 @@ render();
 let smode;
 const markSmode = () => document.querySelectorAll("[data-smode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.smode === smode));
 document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); });
-function openSetup() {
-  smode = state.plan?.mode || (MODES[state.mode] ? state.mode : "pouches"); markSmode();
+let what = [];
+const markWhat = () => { document.querySelectorAll("[data-what]").forEach(b => b.setAttribute("aria-pressed", what.includes(b.dataset.what))); $("whatNext").disabled = !what.length; };
+document.querySelectorAll("[data-what]").forEach(b => b.onclick = () => { const k = b.dataset.what; what = what.includes(k) ? what.filter(x => x !== k) : [...what, k]; markWhat(); });
+$("whatNext").onclick = () => {
+  state.tabs = TABS.filter(m => what.includes(m)); state.mode = state.tabs[0];
+  saveLocal(); render(); fillPrefs();
+  if (state.tabs.some(m => MODES[m])) openSetup("plan"); else $("setup").close("done");
+};
+function openSetup(step) {
+  $("stepWhat").hidden = step !== "what"; $("stepPlan").hidden = step === "what";
+  what = []; markWhat();
+  document.querySelectorAll("[data-smode]").forEach(b => b.hidden = !state.tabs.includes(b.dataset.smode));
+  smode = state.plan?.mode || (MODES[state.mode] ? state.mode : state.tabs.find(m => MODES[m]) || "pouches"); markSmode();
   $("sFrom").value = state.plan?.from || state.limits[smode];
   $("sEnd").min = shift(today, 1);
   $("sEnd").value = state.plan?.end > today ? state.plan.end : shift(today, 56);
   $("setup").returnValue = "";
-  $("setup").showModal();
+  if (!$("setup").open) $("setup").showModal();
 }
 $("setup").onclose = () => {
   if ($("setup").returnValue === "plan") {
     state.plan = { mode: smode, from: Math.round(+$("sFrom").value), start: today, end: $("sEnd").value };
-    state.mode = smode; refreshToday(); goTo(today);
+    state.mode = smode; refreshToday(); goTo(today); fillPrefs();
   }
   state.setup = true; saveLocal(); render();
 };
-$("planBtn").onclick = openSetup;
-$("planDel").onclick = () => { if (confirm("Remove the plan? Your logged days stay.")) { delete state.plan; refreshToday(); saveLocal(); render(); } };
-if (!state.setup) openSetup();
+$("planBtn").onclick = () => openSetup("plan");
+$("planDel").onclick = () => { if (confirm("Remove the plan? Your logged days stay.")) { delete state.plan; refreshToday(); saveLocal(); render(); fillPrefs(); } };
+if (!state.setup) openSetup("what");
+
+$("pCur").innerHTML = CURRENCIES.map(c => `<option>${c}</option>`).join("");
+function fillPrefs() {
+  for (const m of TABS) $("t-" + m).checked = state.tabs.includes(m);
+  $("pMeasure").value = state.measure;
+  $("pCur").value = state.money.currency;
+  $("pSince").value = sinceOf(); $("pSince").max = today;
+  for (const m of TABS) for (const f of ["price", "per", "before"]) { const el = $(`f-${m}-${f}`); if (el) el.value = (f === "before" ? beforeOf(m) : state.money[m][f]) ?? ""; }
+}
+$("prefs").oninput = () => {
+  const v = id => $(id)?.value;
+  const t = TABS.filter(m => $("t-" + m).checked);
+  if (t.length) state.tabs = t; else for (const m of state.tabs) $("t-" + m).checked = true; // keep at least one
+  state.measure = VOL[v("pMeasure")] ? v("pMeasure") : "ml";
+  state.money = cleanMoney({ currency: v("pCur"), since: v("pSince"), ...Object.fromEntries(TABS.map(m => [m, { price: v(`f-${m}-price`), per: v(`f-${m}-per`), before: v(`f-${m}-before`) }])) });
+  saveLocal(); render();
+};
+fillPrefs();
 
 // Backup: export / import as JSON.
 const msg = t => { $("dataMsg").textContent = t; };
@@ -533,8 +669,8 @@ $("import").onchange = async e => {
     for (const k in s.days) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) days[k] = norm(s.days[k]);
     const p = s.plan, D = /^\d{4}-\d{2}-\d{2}$/;
     const plan = p && MODES[p.mode] && D.test(p.start) && D.test(p.end) && p.end > p.start && +p.from > 0 ? { mode: p.mode, from: Math.round(+p.from), start: p.start, end: p.end } : state.plan;
-    state = { ...state, plan, mode: TABS.includes(s.mode) ? s.mode : state.mode, weekly: s.weekly >= 0 && s.weekly <= 100 ? +s.weekly : state.weekly, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
-    saveLocal(); render();
+    state = { ...state, plan, tabs: cleanTabs(s.tabs)?.length ? cleanTabs(s.tabs) : state.tabs, measure: VOL[s.measure] ? s.measure : state.measure, money: s.money ? cleanMoney(s.money) : state.money, mode: TABS.includes(s.mode) ? s.mode : state.mode, weekly: s.weekly >= 0 && s.weekly <= 100 ? +s.weekly : state.weekly, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
+    saveLocal(); render(); fillPrefs();
     msg(`Imported ${Object.keys(days).length} days.`);
   } catch { msg("That file isn't a Less backup."); }
 };
