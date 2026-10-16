@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Tracker</title>
+<title>Less</title>
 <meta name="description" content="Track nicotine and alcohol: daily and weekly limits, a plan to quit and your trend. Data stays on your phone.">
 <meta name="theme-color" content="#1f7a5c">
 <link rel="manifest" href="manifest.webmanifest">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Tracker">
+<meta name="apple-mobile-web-app-title" content="Less">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -127,7 +127,7 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 </head>
 <body>
 <div class="wrap">
-  <header><h1>Tracker</h1><span class="date" id="date"></span></header>
+  <header><h1>Less</h1><span class="date" id="date"></span></header>
 
   <p class="panel install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
 
@@ -518,7 +518,7 @@ $("export").onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `tracker-backup-${today}.json`;
+  a.download = `less-backup-${today}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   msg(`Exported ${Object.keys(state.days).length} days.`);
@@ -536,7 +536,7 @@ $("import").onchange = async e => {
     state = { ...state, plan, mode: TABS.includes(s.mode) ? s.mode : state.mode, weekly: s.weekly >= 0 && s.weekly <= 100 ? +s.weekly : state.weekly, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
     saveLocal(); render();
     msg(`Imported ${Object.keys(days).length} days.`);
-  } catch { msg("That file isn't a Tracker backup."); }
+  } catch { msg("That file isn't a Less backup."); }
 };
 
 if (GOATCOUNTER) {

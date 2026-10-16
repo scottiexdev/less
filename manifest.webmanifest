@@ -1,6 +1,6 @@
 {
-  "name": "Tracker",
-  "short_name": "Tracker",
+  "name": "Less",
+  "short_name": "Less",
   "description": "Track nicotine and alcohol: daily and weekly limits, a plan to quit and your trend.",
   "start_url": "./",
   "scope": "./",
