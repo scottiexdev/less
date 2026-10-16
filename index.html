@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nicotine Tracker</title>
+<meta name="description" content="Track daily nicotine pouches and cigarettes, set limits and watch your mg trend. Data stays on your phone.">
+<meta name="theme-color" content="#1f7a5c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nicotine">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column — mode switch, today's counter, limit + strength, unit chart, mg chart, stats. */
+:root {
+  --bg: #f3f5f4; --surface: #ffffff; --fg: #17201d; --muted: #5f6d68; --line: #dbe2df;
+  --accent: #1f7a5c; --accent-soft: #d6ece3; --over: #c4472b; --over-soft: #f6ddd5; --mg: #3d6aa8;
+  --display: "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #93a29c; --line: #2a3530;
+  --accent: #4cc294; --accent-soft: #1c3a2f; --over: #ef7a5c; --over-soft: #3d2219; --mg: #7fa8e0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #93a29c; --line: #2a3530;
+  --accent: #4cc294; --accent-soft: #1c3a2f; --over: #ef7a5c; --over-soft: #3d2219; --mg: #7fa8e0; color-scheme: dark }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; font-size: 14px; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: light; }
+[hidden] { display: none !important; }
+.wrap { max-width: 480px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 14px; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+h1 { font-family: var(--display); font-size: 1.3rem; margin: 0; }
+.date { color: var(--muted); font-size: .85rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+button, .filebtn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .4; cursor: default; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.modes button { border: 0; padding: 10px; font-weight: 600; background: transparent; color: var(--muted); border-radius: 9px; }
+.modes button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.today { display: grid; gap: 14px; text-align: center; }
+.big { font-family: var(--mono); font-weight: 700; font-size: 5.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.big small { font-size: 1.6rem; color: var(--muted); font-weight: 500; }
+.mgline { font-family: var(--mono); color: var(--mg); font-size: .95rem; margin-top: -6px; }
+.status { font-size: .9rem; font-weight: 600; justify-self: center; padding: 4px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.status.over { background: var(--over-soft); color: var(--over); }
+.meter { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.meter.over i { background: var(--over); }
+.btns { display: grid; grid-template-columns: 1fr 2.2fr; gap: 10px; }
+.minus { font-size: 1.8rem; padding: 14px; }
+.plus { font-family: var(--display); font-weight: 700; font-size: 1.2rem; padding: 18px; background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.plus:active, .minus:active { transform: scale(.97); }
+.settings { display: grid; gap: 14px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.row label { font-weight: 600; }
+.row .hint { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; }
+.ctl { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ctl button { width: 40px; height: 40px; font-size: 1.2rem; }
+.ctl output { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; min-width: 4.5ch; text-align: center; }
+h2 { font-family: var(--display); font-size: 1rem; margin: 0 0 10px; display: flex; justify-content: space-between; gap: 8px; }
+h2 span { font-family: system-ui, sans-serif; font-weight: 400; font-size: .78rem; color: var(--muted); }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-family: var(--mono); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.empty { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+.note { color: var(--muted); font-size: .78rem; text-align: center; margin: 0; }
+.dbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dbtns button, .filebtn { padding: 12px; font-weight: 600; text-align: center; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.filebtn:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+.data .note { margin-top: 10px; }
+.install { font-size: .85rem; line-height: 1.45; border-color: var(--accent); background: var(--accent-soft); color: var(--fg); }
+.install b { color: var(--accent); }
+.foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>Nicotine Tracker</h1><span class="date" id="date"></span></header>
+
+  <p class="panel install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
+
+  <div class="modes" role="group" aria-label="Tracking mode">
+    <button id="m-pouches" data-mode="pouches">Pouches</button>
+    <button id="m-cigarettes" data-mode="cigarettes">Cigarettes</button>
+  </div>
+
+  <section class="panel today">
+    <div class="big" id="count">0<small>/9</small></div>
+    <div class="mgline" id="mgToday">0 mg nicotine today</div>
+    <div class="meter" id="meter"><i></i></div>
+    <div class="status" id="status">9 left today</div>
+    <div class="btns">
+      <button class="minus" id="minus" aria-label="Remove one">−</button>
+      <button class="plus" id="plus">+1 pouch</button>
+    </div>
+  </section>
+
+  <section class="panel settings">
+    <div class="row">
+      <label for="limitOut">Daily limit<span class="hint" id="limitHint">pouches per day</span></label>
+      <div class="ctl"><button id="limDown" aria-label="Lower limit">−</button><output id="limitOut">9</output><button id="limUp" aria-label="Raise limit">+</button></div>
+    </div>
+    <div class="row">
+      <label for="strOut">Strength<span class="hint" id="strHint">mg per pouch, from the can</span></label>
+      <div class="ctl"><button id="strDown" aria-label="Lower strength">−</button><output id="strOut">6 mg</output><button id="strUp" aria-label="Raise strength">+</button></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 id="unitTitle">Pouches per day <span>last 30 days</span></h2>
+    <svg class="chart" id="unitChart" viewBox="0 0 340 170" role="img" aria-label="Units per day"></svg>
+    <div class="stats">
+      <div class="stat"><b id="avg7">–</b><span>7-day avg</span></div>
+      <div class="stat"><b id="avgPrev">–</b><span>Week before</span></div>
+      <div class="stat"><b id="under">–</b><span>Days in limit</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Nicotine per day <span>mg, pouches + cigarettes</span></h2>
+    <svg class="chart" id="mgChart" viewBox="0 0 340 170" role="img" aria-label="Milligrams of nicotine per day"></svg>
+    <div class="stats">
+      <div class="stat"><b id="mg7">–</b><span>7-day avg mg</span></div>
+      <div class="stat"><b id="mgPrev">–</b><span>Week before</span></div>
+      <div class="stat"><b id="mgDelta">–</b><span>Change</span></div>
+    </div>
+    <p class="empty" id="empty">The charts fill in as you log. Each day you tap +1 becomes a bar; the dashed line is that day's limit.</p>
+  </section>
+  <section class="panel data">
+    <h2>Your data <span>stays in this browser</span></h2>
+    <p class="empty" style="margin:0 0 12px">Nothing is sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
+    <div class="dbtns">
+      <button id="export">Export backup</button>
+      <label class="filebtn" for="import">Import backup</label>
+      <input type="file" id="import" accept="application/json,.json" hidden>
+    </div>
+    <p class="note" id="dataMsg" role="status"></p>
+  </section>
+  <p class="note foot"><a href="https://github.com/scottiexdev/nicotine-tracker">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
+</div>
+
+<script>
+// Your donation page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors…). Leave empty to hide the link.
+const DONATE_URL = "";
+const LS = "nicotine-v2";
+const MODES = {
+  pouches: { one: "pouch", many: "pouches", strStep: 1, strHint: "mg per pouch, from the can" },
+  cigarettes: { one: "cigarette", many: "cigarettes", strStep: 0.1, strHint: "mg nicotine per cigarette (≈1 inhaled)" },
+};
+const pad = n => String(n).padStart(2, "0");
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const r1 = n => Math.round(n * 10) / 10;
+let today = keyOf(new Date());
+// day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
+let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5 }, strength: { pouches: 6, cigarettes: 1 }, days: {} };
+
+// Days from v1 ({count, limit}) were all 6 mg pouches.
+const norm = v => v && "count" in v && !("pouches" in v)
+  ? { pouches: v.count, cigarettes: 0, mg: v.count * 6, limits: { pouches: v.limit, cigarettes: 5 } }
+  : { pouches: v.pouches || 0, cigarettes: v.cigarettes || 0, mg: v.mg || 0, limits: { ...state.limits, ...(v.limits || {}) } };
+
+try {
+  const s = JSON.parse(localStorage.getItem(LS));
+  if (s && s.days) state = { ...state, ...s };
+  else { const old = JSON.parse(localStorage.getItem("pouches-v1")); if (old && old.days) { state.limits.pouches = old.limit; for (const k in old.days) state.days[k] = norm(old.days[k]); } }
+} catch {}
+const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
+const settingsDoc = () => ({ mode: state.mode, limits: state.limits, strength: state.strength });
+
+const day = () => state.days[today] || { pouches: 0, cigarettes: 0, mg: 0, limits: { ...state.limits } };
+const $ = id => document.getElementById(id);
+
+function render() {
+  const m = state.mode, M = MODES[m], d = day(), n = d[m], lim = state.limits[m], over = n > lim;
+  $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  for (const k in MODES) $("m-" + k).setAttribute("aria-pressed", k === m);
+  $("count").innerHTML = `${n}<small>/${lim}</small>`;
+  $("mgToday").textContent = `${r1(d.mg)} mg nicotine today`;
+  $("meter").classList.toggle("over", over);
+  $("meter").firstElementChild.style.width = Math.min(100, lim ? n / lim * 100 : 100) + "%";
+  const st = $("status");
+  st.classList.toggle("over", over);
+  st.textContent = over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left today`;
+  $("plus").textContent = `+1 ${M.one}`;
+  $("minus").disabled = n === 0;
+  $("limitOut").textContent = lim;
+  $("limitHint").textContent = `${M.many} per day`;
+  $("strOut").textContent = `${r1(state.strength[m])} mg`;
+  $("strHint").textContent = M.strHint;
+  $("unitTitle").firstChild.textContent = `${M.many[0].toUpperCase() + M.many.slice(1)} per day `;
+  renderCharts();
+}
+
+function chart(svg, rows, dates, valueOf, limitOf, color) {
+  const W = 340, H = 170, L = 26, B = 22, T = 8, n = rows.length;
+  const max = Math.max(4, ...rows.map(r => r ? Math.max(valueOf(r), limitOf ? limitOf(r) : 0) : 0));
+  const step = Math.ceil(max / 4), top = step * 4, y = v => T + (H - B - T) * (1 - v / top), bw = (W - L) / n;
+  let s = "", path = "";
+  for (let v = 0; v <= top; v += step) s += `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
+  rows.forEach((r, i) => {
+    const x = L + i * bw;
+    if (r) {
+      const v = valueOf(r), lim = limitOf && limitOf(r);
+      const fill = typeof color === "function" ? color(v, lim) : color;
+      s += `<rect x="${x + 1.5}" y="${y(v)}" width="${bw - 3}" height="${y(0) - y(v)}" rx="2" fill="${fill}" opacity="${dates[i] === today ? 1 : .8}"><title>${dates[i]}: ${r1(v)}${lim != null ? ` (limit ${lim})` : ""}</title></rect>`;
+      if (lim != null) path += `${path ? "L" : "M"}${x} ${y(lim)} H${x + bw}`;
+    }
+    if (i % 7 === (n - 1) % 7) s += `<text x="${i === n - 1 ? W : x + bw / 2}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${dates[i].slice(8)}/${dates[i].slice(5, 7)}</text>`;
+  });
+  if (path) s += `<path d="${path}" fill="none" stroke="var(--fg)" stroke-width="1.2" stroke-dasharray="3 3" opacity=".6"/>`;
+  svg.innerHTML = s;
+}
+
+function renderCharts() {
+  const m = state.mode, dates = [];
+  for (let i = 29; i >= 0; i--) { const x = new Date(); x.setDate(x.getDate() - i); dates.push(keyOf(x)); }
+  const rows = dates.map(k => state.days[k]);
+  chart($("unitChart"), rows, dates, r => r[m], r => r.limits[m], (v, lim) => v > lim ? "var(--over)" : "var(--accent)");
+  chart($("mgChart"), rows, dates, r => r.mg, null, "var(--mg)");
+  const avg = (arr, f) => { const a = arr.filter(Boolean); return a.length ? a.reduce((t, r) => t + f(r), 0) / a.length : null; };
+  const fmt = v => v == null ? "–" : r1(v);
+  const logged = rows.filter(Boolean);
+  $("avg7").textContent = fmt(avg(rows.slice(-7), r => r[m]));
+  $("avgPrev").textContent = fmt(avg(rows.slice(-14, -7), r => r[m]));
+  $("under").textContent = logged.length ? `${logged.filter(r => r[m] <= r.limits[m]).length}/${logged.length}` : "–";
+  const a = avg(rows.slice(-7), r => r.mg), b = avg(rows.slice(-14, -7), r => r.mg);
+  $("mg7").textContent = fmt(a);
+  $("mgPrev").textContent = fmt(b);
+  $("mgDelta").textContent = a != null && b ? `${a <= b ? "−" : "+"}${Math.abs(Math.round((a - b) / b * 100))}%` : "–";
+  $("empty").hidden = logged.length > 1;
+}
+
+const persist = () => saveLocal();
+
+function tap(delta) {
+  const m = state.mode, d = structuredClone(day());
+  if (d[m] + delta < 0) return;
+  d[m] += delta;
+  // shortcut: removing uses today's current strength, so −1 after a strength change is approximate.
+  d.mg = Math.max(0, r1(d.mg + delta * state.strength[m]));
+  d.limits = { ...state.limits };
+  state.days[today] = d;
+  render(); persist(today, d);
+}
+function setLimit(delta) {
+  const m = state.mode;
+  state.limits = { ...state.limits, [m]: Math.max(0, Math.min(60, state.limits[m] + delta)) };
+  if (state.days[today]) { state.days[today] = { ...state.days[today], limits: { ...state.limits } }; persist(today, state.days[today]); }
+  render(); persist("settings", settingsDoc());
+}
+function setStrength(dir) {
+  const m = state.mode;
+  state.strength = { ...state.strength, [m]: Math.max(0, Math.min(50, r1(state.strength[m] + dir * MODES[m].strStep))) };
+  render(); persist("settings", settingsDoc());
+}
+
+$("plus").onclick = () => tap(1);
+$("minus").onclick = () => tap(-1);
+$("limUp").onclick = () => setLimit(1);
+$("limDown").onclick = () => setLimit(-1);
+$("strUp").onclick = () => setStrength(1);
+$("strDown").onclick = () => setStrength(-1);
+for (const k in MODES) $("m-" + k).onclick = () => { state.mode = k; render(); persist("settings", settingsDoc()); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { today = keyOf(new Date()); render(); } });
+render();
+
+
+// Backup: export / import as JSON.
+const msg = t => { $("dataMsg").textContent = t; };
+$("export").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `nicotine-tracker-${today}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  msg(`Exported ${Object.keys(state.days).length} days.`);
+};
+$("import").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s || typeof s.days !== "object") throw 0;
+    const days = {};
+    for (const k in s.days) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) days[k] = norm(s.days[k]);
+    state = { ...state, mode: MODES[s.mode] ? s.mode : state.mode, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
+    saveLocal(); render();
+    msg(`Imported ${Object.keys(days).length} days.`);
+  } catch { msg("That file isn't a Nicotine Tracker backup."); }
+};
+
+if (DONATE_URL) { $("donate").href = DONATE_URL; $("donate").hidden = false; }
+// iOS Safari: suggest installing, since non-installed sites can lose localStorage after 7 idle days.
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (isIOS && !navigator.standalone) $("iosHint").hidden = false;
+try { navigator.storage?.persist?.(); } catch {}
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
