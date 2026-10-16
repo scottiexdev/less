@@ -87,6 +87,26 @@ h2 span { font-family: system-ui, sans-serif; font-weight: 400; font-size: .78re
 .install b { color: var(--accent); }
 .foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 a { color: var(--accent); }
+.calnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.calnav button { width: 36px; height: 36px; font-size: 1.1rem; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal .wd { text-align: center; font-size: .7rem; color: var(--muted); }
+.cd { min-height: 50px; padding: 3px 0; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center; border-radius: 8px; font-family: var(--mono); line-height: 1.1; }
+.cd i { font-style: normal; font-size: .6rem; color: var(--muted); }
+.cd b { font-size: .95rem; }
+.cd small { font-size: .62rem; color: var(--muted); }
+.cd.ok { background: var(--accent-soft); }
+.cd.over { background: var(--over-soft); }
+.cd.today { border-color: var(--accent); }
+.cd.sel { outline: 2px solid var(--accent); outline-offset: -1px; }
+.cd:disabled { opacity: 1; }
+dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 20px; width: min(420px, calc(100vw - 32px)); box-sizing: border-box; }
+dialog::backdrop { background: rgb(0 0 0 / .45); }
+.setup { display: grid; gap: 14px; }
+.setup label { display: grid; gap: 6px; font-weight: 600; }
+.setup input { font: inherit; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.acts { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.acts button { padding: 12px; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -125,6 +145,14 @@ a { color: var(--accent); }
   </section>
 
   <section class="panel">
+    <h2>Plan <span id="planInfo"></span></h2>
+    <div class="calnav"><button id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button id="calNext" aria-label="Next month">›</button></div>
+    <div class="cal" id="cal"></div>
+    <p class="note" style="margin-top:10px">Big number: what you logged. → the plan for that day. Tap a past day to fix it.</p>
+    <div class="dbtns" style="margin-top:12px"><button id="planBtn">Make a plan</button><button id="planDel">Remove plan</button></div>
+  </section>
+
+  <section class="panel">
     <h2 id="unitTitle">Pouches per day <span>last 30 days</span></h2>
     <svg class="chart" id="unitChart" viewBox="0 0 340 170" role="img" aria-label="Units per day"></svg>
     <div class="stats">
@@ -157,6 +185,19 @@ a { color: var(--accent); }
   <p class="note foot"><a href="https://github.com/scottiexdev/tracker">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
 </div>
 
+<dialog id="setup">
+  <form method="dialog" class="setup">
+    <h2>Make a plan <span>you can skip this</span></h2>
+    <p class="empty" style="margin:0">Tell the app how much you use now and when you want to stop. It lowers your daily limit a little at a time until that day.</p>
+    <div class="modes" role="group" aria-label="What do you use">
+      <button type="button" data-smode="pouches">Pouches</button><button type="button" data-smode="cigarettes">Cigarettes</button>
+    </div>
+    <label>How many a day now?<input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required></label>
+    <label>Stop by<input type="date" id="sEnd" required></label>
+    <div class="acts"><button value="skip" formnovalidate>Skip</button><button class="plus" value="plan">Create plan</button></div>
+  </form>
+</dialog>
+
 <script>
 // Your donation page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors…). Leave empty to hide the link.
 const DONATE_URL = "";
@@ -171,6 +212,8 @@ const r1 = n => Math.round(n * 10) / 10;
 let today = keyOf(new Date());
 let sel = today; // day shown in the counter; can be a past day to fix its count
 const shift = (k, n) => { const x = new Date(k + "T12:00"); x.setDate(x.getDate() + n); return keyOf(x); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
+let cal = today.slice(0, 7); // month shown in the plan calendar
 // day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
 let state = { mode: "pouches", limits: { pouches: 9, cigarettes: 5 }, strength: { pouches: 6, cigarettes: 1 }, days: {} };
 
@@ -187,7 +230,17 @@ try {
 const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
 const settingsDoc = () => ({ mode: state.mode, limits: state.limits, strength: state.strength });
 
-const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: { ...state.limits } };
+// plan: { mode, from, start, end }. Straight line from `from` a day on the start date to 0 on the quit date, then 0.
+const planned = (k, m) => {
+  const p = state.plan;
+  if (!p || p.mode !== m || k < p.start) return null;
+  const n = daysBetween(p.start, p.end);
+  return Math.max(0, Math.ceil(p.from * (n - daysBetween(p.start, k)) / n));
+};
+const limitsOn = k => { const l = { ...state.limits }; for (const m in MODES) { const t = planned(k, m); if (t != null) l[m] = t; } return l; };
+const refreshToday = () => { if (state.days[today]) state.days[today] = { ...state.days[today], limits: limitsOn(today) }; };
+
+const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: limitsOn(sel) };
 const $ = id => document.getElementById(id);
 
 function render() {
@@ -205,12 +258,30 @@ function render() {
   st.textContent = over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left${when}`;
   $("plus").textContent = `+1 ${M.one}`;
   $("minus").disabled = n === 0;
-  $("limitOut").textContent = lim;
-  $("limitHint").textContent = `${M.many} per day`;
+  const pl = planned(today, m);
+  $("limitOut").textContent = limitsOn(today)[m];
+  $("limitHint").textContent = pl != null ? "set by your plan today" : `${M.many} per day`;
+  $("limUp").disabled = $("limDown").disabled = pl != null;
   $("strOut").textContent = `${r1(state.strength[m])} mg`;
   $("strHint").textContent = M.strHint;
   $("unitTitle").firstChild.textContent = `${M.many[0].toUpperCase() + M.many.slice(1)} per day `;
   renderCharts();
+  renderCal();
+}
+
+function renderCal() {
+  const m = state.mode, p = state.plan, [y, mo] = cal.split("-").map(Number), first = new Date(y, mo - 1, 1), n = new Date(y, mo, 0).getDate();
+  $("planInfo").textContent = p ? `${p.from} → 0 ${MODES[p.mode].many} by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "no plan yet";
+  $("planBtn").textContent = p ? "New plan" : "Make a plan";
+  $("planDel").hidden = !p;
+  $("calTitle").textContent = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  let s = ["M", "T", "W", "T", "F", "S", "S"].map(w => `<span class="wd">${w}</span>`).join("") + "<span></span>".repeat((first.getDay() + 6) % 7);
+  for (let i = 1; i <= n; i++) {
+    const k = `${cal}-${pad(i)}`, r = state.days[k], v = r && r[m], t = planned(k, m);
+    const cls = [r ? (v > r.limits[m] ? "over" : "ok") : "", k === today ? "today" : "", k === sel ? "sel" : ""].join(" ");
+    s += `<button class="cd ${cls}" data-k="${k}"${k > today ? " disabled" : ""} aria-label="${k}${r ? `, ${v} logged` : ""}${t != null ? `, plan ${t}` : ""}"><i>${i}</i><b>${r ? v : ""}</b><small>${t != null ? "→" + t : ""}</small></button>`;
+  }
+  $("cal").innerHTML = s;
 }
 
 function chart(svg, rows, dates, valueOf, limitOf, color) {
@@ -260,14 +331,14 @@ function tap(delta) {
   d[m] += delta;
   // shortcut: removing uses today's current strength, so −1 after a strength change is approximate.
   d.mg = Math.max(0, r1(d.mg + delta * state.strength[m]));
-  if (sel === today) d.limits = { ...state.limits }; // past days keep the limit they had
+  if (sel === today) d.limits = limitsOn(today); // past days keep the limit they had
   state.days[sel] = d;
   render(); persist(sel, d);
 }
 function setLimit(delta) {
   const m = state.mode;
   state.limits = { ...state.limits, [m]: Math.max(0, Math.min(60, state.limits[m] + delta)) };
-  if (state.days[today]) { state.days[today] = { ...state.days[today], limits: { ...state.limits } }; persist(today, state.days[today]); }
+  refreshToday();
   render(); persist("settings", settingsDoc());
 }
 function setStrength(dir) {
@@ -282,14 +353,40 @@ $("limUp").onclick = () => setLimit(1);
 $("limDown").onclick = () => setLimit(-1);
 $("strUp").onclick = () => setStrength(1);
 $("strDown").onclick = () => setStrength(-1);
-const goTo = k => { sel = k && k < today ? k : today; render(); };
+const goTo = k => { sel = k && k < today ? k : today; cal = sel.slice(0, 7); render(); };
 $("prevDay").onclick = () => goTo(shift(sel, -1));
 $("nextDay").onclick = () => goTo(shift(sel, 1));
 $("dayPick").onchange = e => goTo(e.target.value);
 for (const k in MODES) $("m-" + k).onclick = () => { state.mode = k; render(); persist("settings", settingsDoc()); };
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { if (sel === today) sel = keyOf(new Date()); today = keyOf(new Date()); render(); } });
+const moveCal = n => { const [y, m] = cal.split("-").map(Number); cal = keyOf(new Date(y, m - 1 + n, 1)).slice(0, 7); renderCal(); };
+$("calPrev").onclick = () => moveCal(-1);
+$("calNext").onclick = () => moveCal(1);
+$("cal").onclick = e => { const b = e.target.closest(".cd"); if (b && !b.disabled) goTo(b.dataset.k); };
 render();
 
+// Setup: current use + quit date → a plan. Shown once on first launch, then from the Plan panel.
+let smode;
+const markSmode = () => document.querySelectorAll("[data-smode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.smode === smode));
+document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); });
+function openSetup() {
+  smode = state.plan?.mode || state.mode; markSmode();
+  $("sFrom").value = state.plan?.from || state.limits[smode];
+  $("sEnd").min = shift(today, 1);
+  $("sEnd").value = state.plan?.end > today ? state.plan.end : shift(today, 56);
+  $("setup").returnValue = "";
+  $("setup").showModal();
+}
+$("setup").onclose = () => {
+  if ($("setup").returnValue === "plan") {
+    state.plan = { mode: smode, from: Math.round(+$("sFrom").value), start: today, end: $("sEnd").value };
+    state.mode = smode; refreshToday(); goTo(today);
+  }
+  state.setup = true; saveLocal(); render();
+};
+$("planBtn").onclick = openSetup;
+$("planDel").onclick = () => { if (confirm("Remove the plan? Your logged days stay.")) { delete state.plan; refreshToday(); saveLocal(); render(); } };
+if (!state.setup) openSetup();
 
 // Backup: export / import as JSON.
 const msg = t => { $("dataMsg").textContent = t; };
@@ -310,7 +407,9 @@ $("import").onchange = async e => {
     if (!s || typeof s.days !== "object") throw 0;
     const days = {};
     for (const k in s.days) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) days[k] = norm(s.days[k]);
-    state = { ...state, mode: MODES[s.mode] ? s.mode : state.mode, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
+    const p = s.plan, D = /^\d{4}-\d{2}-\d{2}$/;
+    const plan = p && MODES[p.mode] && D.test(p.start) && D.test(p.end) && p.end > p.start && +p.from > 0 ? { mode: p.mode, from: Math.round(+p.from), start: p.start, end: p.end } : state.plan;
+    state = { ...state, plan, mode: MODES[s.mode] ? s.mode : state.mode, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
     saveLocal(); render();
     msg(`Imported ${Object.keys(days).length} days.`);
   } catch { msg("That file isn't a Nicotine Tracker backup."); }
