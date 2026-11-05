@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Less</title>
 <meta name="description" content="Track nicotine and alcohol: daily and weekly limits, a plan to quit and your trend. Data stays on your phone.">
-<meta name="theme-color" content="#1f7a5c">
+<meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171512" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -14,138 +15,241 @@
 <meta name="apple-mobile-web-app-title" content="Less">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one narrow column — mode switch, today's counter, limit + strength, unit chart, mg chart, stats. */
+/* Layout: one narrow column — tracker switch, today's ring and buttons, this week, money, limits, plan calendar, charts, data. */
 :root {
-  --bg: #f3f5f4; --surface: #ffffff; --fg: #17201d; --muted: #5f6d68; --line: #dbe2df;
-  --accent: #1f7a5c; --accent-soft: #d6ece3; --over: #c4472b; --over-soft: #f6ddd5; --mg: #3d6aa8;
-  --display: "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --bg: #f5f0e8; --surface: #ede6da; --fg: #1e1c19; --muted: #6b645a; --line: #dcd3c4;
+  --accent: #2f4a3a; --accent-soft: #dce4d5; --on-accent: #f5f0e8; --over: #b4512e; --over-soft: #f3ddd0; --mg: #8a7a62;
+  --serif: "Instrument Serif", Georgia, serif;
+  --sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .12 0 0 0 0 .1 0 0 0 0 .08 0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #93a29c; --line: #2a3530;
-  --accent: #4cc294; --accent-soft: #1c3a2f; --over: #ef7a5c; --over-soft: #3d2219; --mg: #7fa8e0; color-scheme: dark } }
+  --bg: #171512; --surface: #23201b; --fg: #eee7dc; --muted: #a39a8c; --line: #38322b;
+  --accent: #9cc5a8; --accent-soft: #233229; --on-accent: #14201a; --over: #e2805b; --over-soft: #3d241a; --mg: #b8a888; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #93a29c; --line: #2a3530;
-  --accent: #4cc294; --accent-soft: #1c3a2f; --over: #ef7a5c; --over-soft: #3d2219; --mg: #7fa8e0; color-scheme: dark }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; font-size: 14px; }
+  --bg: #171512; --surface: #23201b; --fg: #eee7dc; --muted: #a39a8c; --line: #38322b;
+  --accent: #9cc5a8; --accent-soft: #233229; --on-accent: #14201a; --over: #e2805b; --over-soft: #3d241a; --mg: #b8a888; color-scheme: dark }
+body { margin: 0; background: var(--bg) var(--grain); color: var(--fg); font-family: var(--sans); font-size: 15px; -webkit-font-smoothing: antialiased; }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: light; }
 [hidden] { display: none !important; }
-.wrap { max-width: 480px; margin: 0 auto; padding-block: 20px 40px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 14px; }
-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.hdr { display: flex; align-items: center; gap: 8px; }
-.icon { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; font-size: 1.3rem; }
-.icon svg { width: 20px; height: 20px; }
-.dlghead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.dlghead h2 { margin: 0; }
-h1 { font-family: var(--display); font-size: 1.3rem; margin: 0; }
-.date { color: var(--muted); font-size: .85rem; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.wrap { max-width: 480px; margin: 0 auto; padding-block: 16px 40px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: -14px; }
+.hdr { display: flex; align-items: center; gap: 12px; }
+h1 { font-family: var(--serif); font-weight: 400; font-size: 2rem; line-height: 1; margin: 0; }
+.date { color: var(--muted); font-size: .95rem; font-weight: 600; }
+.icon { width: 42px; height: 42px; padding: 0; display: grid; place-items: center; font-size: 1.3rem; border-radius: 50%; border: 0; background: var(--surface); color: var(--fg); }
+.icon svg { width: 21px; height: 21px; }
+.ico { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.serif { font-family: var(--serif); font-weight: 400; }
 button, .filebtn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; cursor: pointer; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 button:disabled { opacity: .4; cursor: default; }
-.modes { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
-.modes button { border: 0; padding: 10px; font-weight: 600; background: transparent; color: var(--muted); border-radius: 9px; }
-.modes button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
-.today { display: grid; gap: 14px; text-align: center; }
-.big { font-family: var(--mono); font-weight: 700; font-size: 5.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.big small { font-size: 1.6rem; color: var(--muted); font-weight: 500; }
-.mgline { font-family: var(--mono); color: var(--mg); font-size: .95rem; margin-top: -6px; }
-.status { font-size: .9rem; font-weight: 600; justify-self: center; padding: 4px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-.status.over { background: var(--over-soft); color: var(--over); }
-.meter { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
-.meter i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
-.meter.over i { background: var(--over); }
-.daynav { display: grid; grid-template-columns: 44px 1fr 44px; gap: 8px; }
-.daynav button { font-size: 1.3rem; }
-.daynav input { font: inherit; font-weight: 600; text-align: center; padding: 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
-.btns { display: grid; grid-template-columns: 1fr 2.2fr; gap: 10px; }
-.minus { font-size: 1.8rem; padding: 14px; }
-.plus { font-family: var(--display); font-weight: 700; font-size: 1.2rem; padding: 18px; background: var(--accent); color: var(--surface); border-color: var(--accent); }
+h2 { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 span { font-size: .88rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--accent); }
+.panel { display: grid; }
+/* Segmented control: tracker tabs, plan mode, measures. */
+.modes { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; background: var(--surface); border-radius: 16px; }
+.modes button, .modes label { border: 0; padding: 11px 4px; font-weight: 700; background: transparent; color: var(--muted); border-radius: 12px; text-align: center; cursor: pointer; }
+.modes button[aria-pressed="true"], .modes label:has(:checked) { background: var(--bg); color: var(--fg); box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgb(0 0 0 / .06); }
+.modes label input { position: absolute; opacity: 0; pointer-events: none; }
+.modes label:has(:focus-visible) { outline: 3px solid var(--accent); }
+.daynav { display: grid; grid-template-columns: 42px 1fr 42px; gap: 8px; align-items: center; margin-bottom: -10px; }
+.daynav button { height: 42px; border-radius: 50%; font-size: 1.3rem; }
+.daynav input { font: inherit; font-weight: 700; text-align: center; padding: 8px; border: 0; background: transparent; color: var(--fg); min-width: 0; }
+/* Nicotine today: segmented ring, one segment per pouch allowed. */
+.today { display: grid; gap: 16px; text-align: center; }
+.ringbox { position: relative; width: 250px; height: 250px; margin: 0 auto; display: grid; place-items: center; }
+.ringbox svg { position: absolute; inset: 0; }
+.ringbox circle { fill: none; stroke-width: 9; }
+.big { font-family: var(--serif); font-size: 7.5rem; line-height: .85; font-variant-numeric: tabular-nums; }
+.of { display: block; font-size: 1rem; font-weight: 600; color: var(--muted); margin-top: 10px; }
+.of b { color: var(--fg); }
+.btns { display: grid; grid-template-columns: 56px 1fr; gap: 12px; margin-top: 8px; }
+.minus { height: 56px; border-radius: 28px; font-size: 1.6rem; font-weight: 500; }
+.plus { height: 56px; border-radius: 28px; font-weight: 700; font-size: 1.06rem; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.plus .ico { width: 22px; height: 22px; }
 .plus:active, .minus:active { transform: scale(.97); }
-.settings { display: grid; gap: 14px; }
-.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.status { font-size: .9rem; color: var(--muted); margin: 0; }
+.status.over { color: var(--over); font-weight: 700; }
+/* This week: one bar per day with the number inside. */
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 120px; }
+.week button { display: grid; grid-template-rows: 1fr auto; gap: 8px; height: 100%; padding: 0; background: none; font-weight: 700; font-size: .8rem; color: var(--muted); }
+.week i { align-self: end; display: flex; justify-content: center; padding-top: 6px; border-radius: 9px; font: 400 1.2rem var(--serif); font-style: normal; color: var(--on-accent); background: var(--accent); min-height: 30px; }
+.week .over i { background: var(--over); color: #fff; }
+.week .fut i { background: none; border: 1.5px dashed var(--line); color: var(--muted); }
+.week .none i { background: none; border: 1.5px dashed var(--line); }
+.week .now i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--fg); }
+.week .now { color: var(--fg); }
+/* Grouped rows: limits, strength, settings fields. */
+.settings { background: var(--surface); border-radius: 20px; padding: 0 16px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+.row + .row { border-top: 1px solid var(--line); }
 .row label { font-weight: 600; }
-.row .hint { display: block; font-weight: 400; color: var(--muted); font-size: .78rem; }
-.ctl { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.ctl button { width: 40px; height: 40px; font-size: 1.2rem; }
-.ctl output { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; min-width: 4.5ch; text-align: center; }
-h2 { font-family: var(--display); font-size: 1rem; margin: 0 0 10px; display: flex; justify-content: space-between; gap: 8px; }
-h2 span { font-family: system-ui, sans-serif; font-weight: 400; font-size: .78rem; color: var(--muted); }
+.row .hint { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; margin-top: 2px; }
+.ctl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ctl button { width: 34px; height: 34px; border-radius: 50%; font-size: 1.1rem; background: var(--bg); }
+.ctl output { font-family: var(--serif); font-size: 1.7rem; min-width: 2.6ch; text-align: center; line-height: 1; }
+/* Money: one strip, per-tracker lines under it. */
+.money { background: var(--accent-soft); color: var(--accent); border-radius: 22px; padding: 16px 20px; display: grid; gap: 6px; }
+.money .mrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 600; }
+.money .mrow b { font-family: var(--serif); font-weight: 400; font-size: 2.1rem; line-height: 1; }
+.money .mrows { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .85rem; }
+.money .empty { color: var(--accent); margin: 0; }
 .chart { width: 100%; height: auto; display: block; }
-.chart text { fill: var(--muted); font-family: var(--mono); font-size: 10px; }
+.chart text { fill: var(--muted); font-family: var(--sans); font-size: 10px; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
 .stat { display: grid; gap: 2px; }
-.stat b { font-family: var(--mono); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
-.stat span { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.empty { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
-.note { color: var(--muted); font-size: .78rem; text-align: center; margin: 0; }
+.stat b { font-family: var(--serif); font-weight: 400; font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+.empty { color: var(--muted); font-size: .9rem; line-height: 1.45; margin: 8px 0 0; }
+.note { color: var(--muted); font-size: .82rem; text-align: center; margin: 0; }
 .dbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.dbtns button, .filebtn { padding: 12px; font-weight: 600; text-align: center; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+.dbtns button, .filebtn { padding: 14px; font-weight: 700; text-align: center; border-radius: 16px; border: 0; background: var(--surface); color: var(--fg); cursor: pointer; }
 .filebtn:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
 .data .note { margin-top: 10px; }
-.install { font-size: .85rem; line-height: 1.45; border-color: var(--accent); background: var(--accent-soft); color: var(--fg); }
+.install { font-size: .9rem; line-height: 1.45; background: var(--accent-soft); border-radius: 18px; padding: 14px 16px; margin: 0; }
 .install b { color: var(--accent); }
 .foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 a { color: var(--accent); }
-.calnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.calnav button { width: 36px; height: 36px; font-size: 1.1rem; }
-.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal .wd { text-align: center; font-size: .7rem; color: var(--muted); }
-.cd { min-height: 50px; padding: 3px 0; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; align-items: center; border-radius: 8px; font-family: var(--mono); line-height: 1.1; }
-.cd i { font-style: normal; font-size: .6rem; color: var(--muted); }
-.cd b { font-size: .95rem; }
-.cd small { font-size: .62rem; color: var(--muted); }
-.cd.ok { background: var(--accent-soft); }
-.cd.over { background: var(--over-soft); }
-.cd.today { border-color: var(--accent); }
-.cd.sel { outline: 2px solid var(--accent); outline-offset: -1px; }
+/* Plan calendar */
+.calnav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.calnav b { font-family: var(--serif); font-weight: 400; font-size: 2.2rem; line-height: 1; }
+.calnav button { width: 38px; height: 38px; border-radius: 50%; font-size: 1.1rem; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal .wd { text-align: center; font-size: .78rem; font-weight: 700; color: var(--muted); padding-bottom: 4px; }
+.cd { min-height: 58px; padding: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; background: none; border: 1.5px dashed var(--line); line-height: 1; }
+.cd i { font-style: normal; font-size: .7rem; font-weight: 700; color: var(--muted); }
+.cd b { font-family: var(--serif); font-weight: 400; font-size: 1.35rem; color: var(--muted); opacity: .75; }
+.cd.ok { background: var(--accent-soft); border-color: transparent; }
+.cd.ok b { color: var(--accent); opacity: 1; }
+.cd.over { background: var(--over-soft); border-color: transparent; }
+.cd.over b { color: var(--over); opacity: 1; }
+.cd.today { border: 2px solid var(--fg); }
+.cd.sel { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cd:disabled { opacity: 1; }
-dialog { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 20px; width: min(420px, calc(100vw - 32px)); box-sizing: border-box; }
-dialog::backdrop { background: rgb(0 0 0 / .45); }
-.setup { display: grid; gap: 14px; }
-.setup label { display: grid; gap: 6px; font-weight: 600; }
-.setup input { font: inherit; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
-.acts { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
-.acts button { padding: 12px; font-weight: 600; }
-.stack { display: grid; gap: 14px; }
-.drinks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.drinks button { padding: 10px 8px; text-align: left; line-height: 1.25; }
-.drinks button b { white-space: nowrap; }
-.drinks button span { display: block; font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; font-weight: 600; color: var(--muted); margin: 14px 0 0; }
+.legend span { display: flex; align-items: center; gap: 7px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.legend .o { background: var(--over); }
+.legend .p { background: none; border: 1.5px dashed var(--muted); box-sizing: border-box; }
+/* Dialogs: onboarding fills the screen, settings rises as a sheet. */
+dialog { border: 0; background: var(--bg) var(--grain); color: var(--fg); padding: 0; box-sizing: border-box; }
+dialog::backdrop { background: rgb(30 22 14 / .45); }
+#setup { width: 100%; max-width: 480px; height: 100%; max-height: none; margin: 0 auto; overflow: hidden auto; }
+#setup::backdrop { background: var(--bg); }
+.setup { display: flex; flex-direction: column; gap: 16px; min-height: 100%; box-sizing: border-box; position: relative;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px)); }
+form.setup { padding: 0; }
+.setup > .setup { flex: 1; }
+.setup .top { display: flex; justify-content: space-between; align-items: center; height: 48px; position: relative; }
+.eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.headline { display: block; font-family: var(--serif); font-weight: 400; font-size: 4.4rem; line-height: .92; letter-spacing: -.01em; text-transform: none; color: var(--fg); margin: 28px 0 0; position: relative; }
+.headline em { font-style: italic; }
+.lede { font-size: 1.05rem; line-height: 1.5; color: var(--muted); margin: 0; max-width: 18em; position: relative; }
+.orbit { position: absolute; right: -130px; top: 60px; width: 360px; height: 360px; pointer-events: none; }
+.choices { display: grid; gap: 12px; margin-top: 12px; position: relative; }
+.choices button { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 22px; text-align: left; background: var(--bg); box-shadow: 0 0 0 1.5px var(--line) inset; }
+.choices b { display: block; font-size: 1.1rem; }
+.choices small { display: block; font-size: .88rem; color: var(--muted); margin-top: 2px; }
+.choices span { flex: 1; }
+.choices button::after { content: ""; width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--line) inset; flex: none; }
+.choices button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.choices button[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.choices button[aria-pressed="true"]::after { content: "✓"; display: grid; place-items: center; font-weight: 800; font-size: .95rem; box-shadow: none; background: var(--on-accent); color: var(--accent); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { background: var(--surface); border-radius: 22px; padding: 14px 16px; display: grid; gap: 6px; font-size: .9rem; font-weight: 600; color: var(--muted); }
+.tile input { font-family: var(--serif); font-size: 2.3rem; line-height: 1; border: 0; background: none; color: var(--fg); padding: 0; width: 100%; min-width: 0; }
+.tile input[type="date"] { font-size: 1.35rem; padding: 6px 0; }
+.stepper { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; gap: 4px; }
+.stepper button { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); font-size: 1.2rem; }
+.stepper input { text-align: center; -moz-appearance: textfield; }
+.stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.taper { width: 100%; height: auto; display: block; overflow: visible; }
+.taper text { font-family: var(--serif); font-size: 20px; fill: var(--fg); }
+.taper .x { font-family: var(--sans); font-size: 12px; font-weight: 600; fill: var(--muted); }
+.taperNote { display: flex; gap: 12px; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; margin: 0; line-height: 1.35; }
+.taperNote b { font-family: var(--serif); font-weight: 400; font-size: 2.1rem; color: var(--accent); }
+.acts { display: grid; grid-template-columns: 110px 1fr; gap: 10px; margin-top: auto; padding-top: 12px; }
+.acts button { height: 56px; border-radius: 28px; font-weight: 700; font-size: 1.06rem; background: none; }
+.acts .plus { background: var(--accent); }
+#prefsDlg { width: 100%; max-width: 480px; max-height: 92dvh; margin: auto auto 0; border-radius: 30px 30px 0 0; padding: 10px 24px max(24px, env(safe-area-inset-bottom, 0px)); overflow: auto; }
+#prefsDlg[open] { animation: rise .28s cubic-bezier(.2, .8, .2, 1); }
+@keyframes rise { from { transform: translateY(40%); opacity: 0; } }
+#prefsDlg::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
+.dlghead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.dlghead h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 2.5rem; letter-spacing: 0; text-transform: none; color: var(--fg); }
+.dlghead .icon { width: 36px; height: 36px; color: var(--muted); }
+.prefs { display: grid; gap: 18px; }
+.prefs .lbl { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 -8px; }
+.prefs select, .prefs input { font: inherit; font-weight: 700; color: var(--fg); min-width: 0; }
+.prefs fieldset { margin: 0; border: 0; padding: 0 16px; background: var(--surface); border-radius: 20px; display: grid; }
+.prefs fieldset > label, .prefs .field { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 0; font-weight: 500; }
+.prefs fieldset > label + label { border-top: 1px solid var(--line); }
+.prefs fieldset input, .prefs .field input, .prefs .field select { border: 0; background: none; text-align: right; width: 8em; padding: 4px 0; }
+.prefs fieldset select { border: 0; background: none; text-align: right; padding: 4px 0; }
+.prefs legend { float: left; width: 100%; padding: 14px 0 2px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.prefs .sw { font-weight: 600; }
+.prefs .sw span { display: flex; align-items: center; gap: 12px; }
+.prefs .sw input { appearance: none; -webkit-appearance: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line); position: relative; cursor: pointer; flex: none; margin: 0; transition: background .2s; }
+.prefs .sw input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--bg); transition: transform .2s; box-shadow: 0 1px 2px rgb(0 0 0 / .15); }
+.prefs .sw input:checked { background: var(--accent); }
+.prefs .sw input:checked::after { transform: translateX(20px); }
+.prefs .hint { font-size: .82rem; line-height: 1.45; color: var(--muted); margin: 0; }
+.prefs fieldset .hint { padding: 0 0 12px; }
+/* Alcohol */
+.stack { display: grid; gap: 28px; }
+.atoday { display: grid; gap: 14px; }
+.atoday .big { font-size: 5rem; text-align: left; }
+.atoday .big small { font-size: 1.9rem; color: var(--muted); }
+.banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; font-weight: 700; font-size: .95rem; background: var(--accent-soft); color: var(--accent); margin: 0; }
+.banner::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.banner.over { background: var(--over-soft); color: var(--over); }
+.wk { display: grid; gap: 10px; font-size: .9rem; font-weight: 600; }
+.wk > div:first-child { display: flex; justify-content: space-between; color: var(--muted); }
+.wk > div:first-child b { color: var(--fg); }
+.meter { height: 12px; background: var(--surface); border-radius: 6px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); width: 0; border-radius: 6px; transition: width .2s; }
+.meter.over i { background: var(--over); }
+.drinks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.drinks button { padding: 12px 16px 14px; text-align: left; border-radius: 20px; display: grid; gap: 2px; }
+.drinks .t { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.drinks .t span { font-family: var(--serif); font-size: 1.65rem; line-height: 1; }
+.drinks .t small { font-size: 1rem; color: var(--muted); }
+.drinks b { font-size: .95rem; }
+.drinks .v { font-size: .82rem; color: var(--muted); }
 .custom { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
-.custom label { display: grid; gap: 4px; font-size: .78rem; color: var(--muted); text-align: left; }
-.custom input { font: inherit; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
-.custom button { padding: 10px 14px; font-weight: 600; }
-.dlog { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
-.dlog li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.custom label { display: grid; gap: 4px; font-size: .8rem; font-weight: 600; color: var(--muted); text-align: left; }
+.custom input { font: inherit; font-weight: 700; padding: 11px 12px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); min-width: 0; }
+.custom button { padding: 12px 18px; font-weight: 700; background: var(--accent); color: var(--on-accent); border-radius: 22px; }
+.dlog { list-style: none; margin: 0; padding: 0; display: grid; text-align: left; }
+.dlog li { display: flex; align-items: center; gap: 12px; padding: 6px 0; font-size: 1rem; }
+.dlog li + li { border-top: 1px solid var(--line); }
 .dlog li span { flex: 1; }
-.dlog li b { font-family: var(--mono); }
-.dlog li button { width: 34px; height: 34px; }
-.meters { display: grid; gap: 6px; text-align: left; font-size: .75rem; color: var(--muted); }
-.big.money { font-size: 3rem; }
-.prefs { display: grid; gap: 14px; margin-top: 14px; }
-.prefs label { display: grid; gap: 4px; font-size: .78rem; color: var(--muted); }
-.prefs input, .prefs select { font: inherit; font-size: 14px; padding: 9px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
-.prefs .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.prefs fieldset { margin: 0; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-items: end; }
-.prefs fieldset.alc { grid-template-columns: 1fr 1fr; }
-.prefs .chk { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--fg); }
-.prefs .chk input { width: 18px; height: 18px; margin: 0; }
-.prefs legend { font-weight: 600; padding: 0 4px; }
-.prefs .hint { grid-column: 1 / -1; font-size: .75rem; color: var(--muted); margin: 0; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.dlog li button { width: 38px; height: 38px; background: none; color: var(--muted); font-size: 1.3rem; }
+.ghost { padding: 14px; font-weight: 700; border-radius: 28px; background: none; box-shadow: 0 0 0 1.5px var(--line) inset; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pouch" viewBox="0 0 26 26"><rect x="3" y="7" width="20" height="13" rx="6.5"/><path d="M7 7.6c0-2 2.7-3.6 6-3.6s6 1.6 6 3.6"/><path d="M9 13.5h8" stroke-dasharray="1 2.6"/></symbol>
+  <symbol id="i-cigarette" viewBox="0 0 26 26"><rect x="2.5" y="11" width="21" height="5" rx="1.6"/><path d="M17 11v5"/><path d="M20 8c0-1.5 1.5-1.8 1.5-3.3M22.8 8.4c0-1.5 1-1.8 1-2.8"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 26 26"><path d="M7 3.5h12l-.8 7a5.2 5.2 0 0 1-10.4 0z"/><path d="M13 15.6V22M9 22.5h8"/><path d="M7.6 8.2h10.8"/></symbol>
+  <symbol id="i-pint" viewBox="0 0 26 26"><path d="M6.5 4h13l-1.6 17.4a1.6 1.6 0 0 1-1.6 1.4H9.7a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M7 8.5h12"/></symbol>
+  <symbol id="i-can" viewBox="0 0 26 26"><rect x="7" y="3.5" width="12" height="19" rx="3"/><path d="M7 7.5h12M7 18.5h12"/></symbol>
+  <symbol id="i-bottle" viewBox="0 0 26 26"><path d="M11 3h4v4.5c2.2 1 3 2.6 3 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 8 21v-9c0-1.9.8-3.5 3-4.5z"/><path d="M8 14h10"/></symbol>
+  <symbol id="i-shot" viewBox="0 0 26 26"><path d="M8 7h10l-1.4 13.2a1.4 1.4 0 0 1-1.4 1.3h-4.4a1.4 1.4 0 0 1-1.4-1.3z"/><path d="M8.6 12.5h8.8"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 8h9M18 8h2M4 16h3M12 16h8"/><circle cx="15.5" cy="8" r="2.5"/><circle cx="9.5" cy="16" r="2.5"/></symbol>
+</svg>
 <div class="wrap">
-  <header><h1>Less</h1><span class="hdr"><span class="date" id="date"></span><button class="icon" id="prefsBtn" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button></span></header>
+  <header><h1>Less</h1><span class="hdr"><span class="date" id="date"></span><button class="icon" id="prefsBtn" aria-label="Settings"><svg class="ico" aria-hidden="true"><use href="#i-sliders"/></svg></button></span></header>
 
-  <p class="panel install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
+  <p class="install" id="iosHint" hidden><b>On iPhone:</b> tap Share, then <b>Add to Home Screen</b>. Safari can erase data from websites you haven't opened in 7 days; the installed app keeps it.</p>
 
   <div class="modes" id="tabs" role="group" aria-label="Tracking mode">
     <button id="m-pouches" data-mode="pouches">Pouches</button>
@@ -155,25 +259,63 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 
   <div class="daynav"><button id="prevDay" aria-label="Previous day">‹</button><input type="date" id="dayPick" aria-label="Day to edit"><button id="nextDay" aria-label="Next day">›</button></div>
 
-  <section class="panel today nic">
-    <div class="big" id="count">0<small>/9</small></div>
-    <div class="mgline" id="mgToday">0 mg nicotine today</div>
-    <div class="meter" id="meter"><i></i></div>
-    <div class="status" id="status">9 left today</div>
+  <section class="today nic">
+    <div class="ringbox">
+      <svg viewBox="0 0 250 250" aria-hidden="true"><g transform="rotate(-87 125 125)"><circle id="ringBase" cx="125" cy="125" r="112" stroke="var(--line)"/><circle id="ringFill" cx="125" cy="125" r="112"/></g></svg>
+      <div><span class="big" id="count">0</span><span class="of" id="ofLine"></span></div>
+    </div>
     <div class="btns">
       <button class="minus" id="minus" aria-label="Remove one">−</button>
-      <button class="plus" id="plus">+1 pouch</button>
+      <button class="plus" id="plus"><svg class="ico" aria-hidden="true"><use id="plusIco" href="#i-pouch"/></svg><span id="plusTxt">+1 pouch</span></button>
     </div>
+    <p class="status" id="status" role="status"></p>
   </section>
 
-  <section class="panel settings nic">
-    <div class="row">
-      <label for="limitOut">Daily limit<span class="hint" id="limitHint">pouches per day</span></label>
-      <div class="ctl"><button id="limDown" aria-label="Lower limit">−</button><output id="limitOut">9</output><button id="limUp" aria-label="Raise limit">+</button></div>
-    </div>
-    <div class="row">
-      <label for="strOut">Strength<span class="hint" id="strHint">mg per pouch, from the can</span></label>
-      <div class="ctl"><button id="strDown" aria-label="Lower strength">−</button><output id="strOut">6 mg</output><button id="strUp" aria-label="Raise strength">+</button></div>
+  <section class="panel nic">
+    <h2>This week <span id="weekInfo"></span></h2>
+    <div class="week" id="week"></div>
+  </section>
+
+  <div class="stack" id="alc" hidden>
+    <section class="atoday">
+      <h2 id="aWhen" style="margin:0 0 -8px">Today</h2>
+      <div class="big" id="units">0<small> units</small></div>
+      <p class="banner" id="aStatus" role="status"></p>
+      <div class="wk"><div><span>This week</span><span><b id="wkUnits">0</b> of <span id="wkLim">14</span> units</span></div><div class="meter" id="wMeter"><i></i></div></div>
+    </section>
+    <section class="panel">
+      <h2>Add a drink</h2>
+      <div class="drinks" id="drinkBtns"></div>
+      <form class="custom" id="custom" style="margin-top:12px">
+        <label><span>Amount, <span id="cUnit">ml</span></span><input type="number" id="cMl" min="1" max="5000" step="1" inputmode="decimal" required></label>
+        <label>Strength, % ABV<input type="number" id="cAbv" min="0.1" max="100" step="0.1" inputmode="decimal" required></label>
+        <button>Add</button>
+      </form>
+    </section>
+    <section class="panel">
+      <h2 id="logTitle">Drinks</h2>
+      <ul class="dlog" id="dlog"></ul>
+      <button class="ghost" id="dryDay">Mark as a dry day</button>
+    </section>
+  </div>
+
+  <section class="money">
+    <div class="mrow"><span id="moneySince">Saved</span><b id="saved"></b></div>
+    <div class="mrows" id="moneyRows"></div>
+    <p class="empty" id="moneyEmpty">Add prices and how much you used before in Settings (the button next to the date) to see what you save.</p>
+  </section>
+
+  <section class="panel nic">
+    <h2>Limits</h2>
+    <div class="settings">
+      <div class="row">
+        <label for="limitOut">Daily limit<span class="hint" id="limitHint">pouches per day</span></label>
+        <div class="ctl"><button id="limDown" aria-label="Lower limit">−</button><output id="limitOut">9</output><button id="limUp" aria-label="Raise limit">+</button></div>
+      </div>
+      <div class="row">
+        <label for="strOut">Strength<span class="hint" id="strHint">mg per pouch, from the can</span></label>
+        <div class="ctl"><button id="strDown" aria-label="Lower strength">−</button><output id="strOut">6 mg</output><button id="strUp" aria-label="Raise strength">+</button></div>
+      </div>
     </div>
   </section>
 
@@ -181,8 +323,9 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     <h2>Plan <span id="planInfo"></span></h2>
     <div class="calnav"><button id="calPrev" aria-label="Previous month">‹</button><b id="calTitle"></b><button id="calNext" aria-label="Next month">›</button></div>
     <div class="cal" id="cal"></div>
-    <p class="note" style="margin-top:10px">Big number: what you logged. → the plan for that day. Tap a past day to fix it.</p>
-    <div class="dbtns" style="margin-top:12px"><button id="planBtn">Make a plan</button><button id="planDel">Remove plan</button></div>
+    <p class="legend"><span><i></i>On plan</span><span><i class="o"></i>Over</span><span><i class="p"></i>Planned</span></p>
+    <p class="empty">Tap a past day to fix what you logged.</p>
+    <div class="dbtns" style="margin-top:14px"><button id="planBtn">Make a plan</button><button id="planDel">Remove plan</button></div>
   </section>
 
   <section class="panel nic">
@@ -205,58 +348,36 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
     </div>
     <p class="empty" id="empty">The charts fill in as you log. Each day you tap +1 becomes a bar; the dashed line is that day's limit.</p>
   </section>
-  <div class="stack" id="alc" hidden>
-    <section class="panel today">
-      <div class="big" id="units">0<small>/4</small></div>
-      <div class="mgline" id="wkLine">units today</div>
-      <div class="meters">
-        <span>Day</span><div class="meter" id="dMeter"><i></i></div>
-        <span>Week (Mon–Sun)</span><div class="meter" id="wMeter"><i></i></div>
-      </div>
-      <div class="status" id="aStatus" role="status"></div>
-      <div class="drinks" id="drinkBtns"></div>
-      <form class="custom" id="custom">
-        <label><span>Amount, <span id="cUnit">ml</span></span><input type="number" id="cMl" min="1" max="5000" step="1" inputmode="decimal" required></label>
-        <label>Strength, % ABV<input type="number" id="cAbv" min="0.1" max="100" step="0.1" inputmode="decimal" required></label>
-        <button>Add</button>
-      </form>
-      <ul class="dlog" id="dlog"></ul>
-      <button id="dryDay" style="padding:12px;font-weight:600">Mark as a dry day</button>
-    </section>
 
-    <section class="panel settings">
-      <div class="row">
-        <label for="aLimOut">Daily limit<span class="hint">units per day</span></label>
-        <div class="ctl"><button id="aLimDown" aria-label="Lower daily limit">−</button><output id="aLimOut">4</output><button id="aLimUp" aria-label="Raise daily limit">+</button></div>
-      </div>
-      <div class="row">
-        <label for="wLimOut">Weekly limit<span class="hint">units Mon–Sun; UK advice is 14 at most</span></label>
-        <div class="ctl"><button id="wLimDown" aria-label="Lower weekly limit">−</button><output id="wLimOut">14</output><button id="wLimUp" aria-label="Raise weekly limit">+</button></div>
-      </div>
-    </section>
-
+  <div class="stack" id="alc2" hidden>
     <section class="panel">
-      <h2>Alcohol units per day <span>last 30 days</span></h2>
+      <h2>Limits</h2>
+      <div class="settings">
+        <div class="row">
+          <label for="aLimOut">Daily limit<span class="hint">units per day</span></label>
+          <div class="ctl"><button id="aLimDown" aria-label="Lower daily limit">−</button><output id="aLimOut">4</output><button id="aLimUp" aria-label="Raise daily limit">+</button></div>
+        </div>
+        <div class="row">
+          <label for="wLimOut">Weekly limit<span class="hint">units Mon–Sun; UK advice is 14 at most</span></label>
+          <div class="ctl"><button id="wLimDown" aria-label="Lower weekly limit">−</button><output id="wLimOut">14</output><button id="wLimUp" aria-label="Raise weekly limit">+</button></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Units per day <span>last 30 days</span></h2>
       <svg class="chart" id="alcChart" viewBox="0 0 340 170" role="img" aria-label="Alcohol units per day"></svg>
       <div class="stats">
         <div class="stat"><b id="wkNow">–</b><span>This week</span></div>
         <div class="stat"><b id="wkPrev">–</b><span>Last week</span></div>
         <div class="stat"><b id="dryN">–</b><span>Dry days, 30d</span></div>
       </div>
-      <p class="note" style="margin-top:10px">1 unit = 10 ml of pure alcohol: ml × % ÷ 1000.</p>
+      <p class="note" style="margin-top:12px">1 unit = 10 ml of pure alcohol: ml × % ÷ 1000.</p>
     </section>
   </div>
 
-  <section class="panel today">
-    <h2>Money saved <span id="moneySince"></span></h2>
-    <div class="big money" id="saved"></div>
-    <div class="stats" id="moneyRows"></div>
-    <p class="empty" id="moneyEmpty">Add prices and how much you used before in Settings (⚙ at the top) to see what you save.</p>
-  </section>
-
   <section class="panel data">
-    <h2>Your data <span>stays in this browser</span></h2>
-    <p class="empty" style="margin:0 0 12px">What you log is never sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
+    <h2>Your data <span>stays on this device</span></h2>
+    <p class="empty" style="margin:0 0 14px">What you log is never sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
     <div class="dbtns">
       <button id="export">Export backup</button>
       <label class="filebtn" for="import">Import backup</label>
@@ -267,24 +388,36 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
   <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
 </div>
 
-<dialog id="setup">
+<dialog id="setup" aria-label="Get started">
   <form method="dialog" class="setup">
    <div class="setup" id="stepWhat">
-    <h2>Less of what? <span>pick one or more</span></h2>
-    <div class="modes" role="group" aria-label="What do you want less of">
-      <button type="button" data-what="pouches">Pouches</button><button type="button" data-what="cigarettes">Cigarettes</button><button type="button" data-what="alcohol">Alcohol</button>
+    <svg class="orbit" viewBox="0 0 360 360" fill="none" aria-hidden="true">
+      <g stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="1.5 7" stroke-linecap="round"><circle cx="180" cy="180" r="170" stroke-opacity=".25"/><circle cx="180" cy="180" r="118" stroke-opacity=".18"/><circle cx="180" cy="180" r="66" stroke-opacity=".12"/></g>
+      <circle cx="60" cy="60" r="5" fill="var(--over)"/>
+    </svg>
+    <div class="top"><span class="serif" style="font-size:1.9rem">Less</span><span class="eyebrow">Step 1 of 2</span></div>
+    <h2 class="headline">Less of<br><em>what?</em></h2>
+    <p class="lede">Pick one or more. Each one gets its own tab.</p>
+    <div class="choices" role="group" aria-label="What do you want less of">
+      <button type="button" data-what="pouches"><svg class="ico" aria-hidden="true"><use href="#i-pouch"/></svg><span><b>Pouches</b><small>Nicotine pouches, snus</small></span></button>
+      <button type="button" data-what="cigarettes"><svg class="ico" aria-hidden="true"><use href="#i-cigarette"/></svg><span><b>Cigarettes</b><small>Rolled or from a pack</small></span></button>
+      <button type="button" data-what="alcohol"><svg class="ico" aria-hidden="true"><use href="#i-glass"/></svg><span><b>Alcohol</b><small>Counted in UK units</small></span></button>
     </div>
-    <p class="empty" style="margin:0">Only these get a tab. You can change it later in Settings.</p>
     <div class="acts"><button value="skip" formnovalidate>Skip</button><button type="button" class="plus" id="whatNext">Next</button></div>
    </div>
    <div class="setup" id="stepPlan">
-    <h2>Plan to quit nicotine <span>you can skip this</span></h2>
-    <p class="empty" style="margin:0">Tell the app how much you use now and when you want to stop. It lowers your daily limit a little at a time until that day.</p>
+    <div class="top"><span class="serif" style="font-size:1.9rem">Less</span><span class="eyebrow" id="planStep">Step 2 of 2</span></div>
+    <h2 class="headline" style="font-size:3.4rem;margin-top:8px">A plan to<br><em>stop.</em></h2>
+    <p class="lede">The daily limit goes down a little at a time until that day. You can change it any day.</p>
     <div class="modes" role="group" aria-label="What do you use">
       <button type="button" data-smode="pouches">Pouches</button><button type="button" data-smode="cigarettes">Cigarettes</button>
     </div>
-    <label>How many a day now?<input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required></label>
-    <label>Stop by<input type="date" id="sEnd" required></label>
+    <div class="tiles">
+      <label class="tile">A day now<span class="stepper"><button type="button" id="sDown" aria-label="One fewer">−</button><input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required><button type="button" id="sUp" aria-label="One more">+</button></span></label>
+      <label class="tile">Stop by<input type="date" id="sEnd" required></label>
+    </div>
+    <svg class="taper" id="taper" viewBox="0 0 340 190" aria-hidden="true"></svg>
+    <p class="taperNote" id="taperNote"></p>
     <div class="acts"><button value="skip" formnovalidate>Skip</button><button class="plus" value="plan">Create plan</button></div>
    </div>
   </form>
@@ -292,33 +425,38 @@ dialog::backdrop { background: rgb(0 0 0 / .45); }
 
 <dialog id="prefsDlg" aria-labelledby="prefsTitle">
   <div class="dlghead"><h2 id="prefsTitle">Settings</h2><button class="icon" id="prefsClose" aria-label="Close settings">×</button></div>
-    <form class="prefs" id="prefs" style="margin-top:0" onsubmit="return false">
-      <div class="two">
-        <label>Measures<select id="pMeasure"><option value="ml">Metric, ml</option><option value="l">Metric, litres</option><option value="floz">US, fl oz</option></select></label>
-        <label>Currency<select id="pCur"></select></label>
+    <form class="prefs" id="prefs" onsubmit="return false">
+      <p class="lbl">Measures</p>
+      <div class="modes" role="radiogroup" aria-label="Measures">
+        <label><input type="radio" name="measure" value="ml">ml</label>
+        <label><input type="radio" name="measure" value="l">Litres</label>
+        <label><input type="radio" name="measure" value="floz">US fl oz</label>
       </div>
       <fieldset><legend>Less of</legend>
-        <label class="chk"><input type="checkbox" id="t-pouches">Pouches</label>
-        <label class="chk"><input type="checkbox" id="t-cigarettes">Cigarettes</label>
-        <label class="chk"><input type="checkbox" id="t-alcohol">Alcohol</label>
+        <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-pouch"/></svg>Pouches</span><input type="checkbox" id="t-pouches"></label>
+        <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-cigarette"/></svg>Cigarettes</span><input type="checkbox" id="t-cigarettes"></label>
+        <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-glass"/></svg>Alcohol</span><input type="checkbox" id="t-alcohol"></label>
       </fieldset>
-      <label>Count money saved from<input type="date" id="pSince"></label>
+      <fieldset><legend>Money</legend>
+        <label>Currency<select id="pCur"></select></label>
+        <label>Count from<input type="date" id="pSince"></label>
+      </fieldset>
       <fieldset><legend>Pouches</legend>
-        <label>Price of a can<input type="number" id="f-pouches-price" min="0" step="0.01" inputmode="decimal"></label>
+        <label>Price of a can<input type="number" id="f-pouches-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
         <label>Pouches in a can<input type="number" id="f-pouches-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
-        <label>A day, before<input type="number" id="f-pouches-before" min="0" step="1" inputmode="numeric"></label>
+        <label>A day, before<input type="number" id="f-pouches-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
       </fieldset>
       <fieldset><legend>Cigarettes</legend>
-        <label>Price of a pack<input type="number" id="f-cigarettes-price" min="0" step="0.01" inputmode="decimal"></label>
+        <label>Price of a pack<input type="number" id="f-cigarettes-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
         <label>Cigarettes in a pack<input type="number" id="f-cigarettes-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
-        <label>A day, before<input type="number" id="f-cigarettes-before" min="0" step="1" inputmode="numeric"></label>
+        <label>A day, before<input type="number" id="f-cigarettes-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
       </fieldset>
-      <fieldset class="alc"><legend>Alcohol</legend>
-        <label>Price of a unit<input type="number" id="f-alcohol-price" min="0" step="0.01" inputmode="decimal"></label>
-        <label>Units a week, before<input type="number" id="f-alcohol-before" min="0" step="1" inputmode="numeric"></label>
+      <fieldset><legend>Alcohol</legend>
+        <label>Price of a unit<input type="number" id="f-alcohol-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Units a week, before<input type="number" id="f-alcohol-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
         <p class="hint">A 5.00 pint of beer is 2.3 units, so about 2.20 a unit.</p>
       </fieldset>
-      <p class="hint" style="margin:0">Saved = (what you used before − what you log) × price, every day since the date above. A day with nothing logged counts as none used. "Before" for the tracker with a quit plan starts from the plan.</p>
+      <p class="hint">Saved = (what you used before − what you log) × price, every day since the date above. A day with nothing logged counts as none used. "Before" for the tracker with a quit plan starts from the plan. Changes save as you type and stay on this device.</p>
     </form>
 </dialog>
 
@@ -355,8 +493,8 @@ const cleanMoney = x => ({
   ...Object.fromEntries(TABS.map(m => [m, { price: num(x?.[m]?.price, 1000), per: num(x?.[m]?.per, 1000), before: num(x?.[m]?.before, 1000) }])),
 });
 // UK units: ml × ABV% ÷ 1000.
-const DRINKS = [["Pint of beer", 568, 4], ["Can of beer", 440, 5], ["Bottle of beer", 330, 5], ["Small wine", 125, 12],
-  ["Glass of wine", 175, 12], ["Large wine", 250, 12], ["Single spirit", 25, 40], ["Alcopop", 275, 5]];
+const DRINKS = [["Pint of beer", 568, 4, "pint"], ["Glass of wine", 175, 12, "glass"], ["Can of beer", 440, 5, "can"], ["Single spirit", 25, 40, "shot"],
+  ["Bottle of beer", 330, 5, "bottle"], ["Small wine", 125, 12, "glass"], ["Large wine", 250, 12, "glass"], ["Alcopop", 275, 5, "bottle"]];
 const unitsOf = (ml, abv) => Math.round(ml * abv / 10) / 100;
 const units = r => r && r.drinks ? r.drinks.reduce((t, x) => t + x.u, 0) : 0;
 const esc = t => String(t).replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`);
@@ -395,7 +533,7 @@ const $ = id => document.getElementById(id);
 
 function render() {
   const m = state.mode;
-  $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  $("date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
   if (!state.tabs.includes(m)) return state.mode = state.tabs[0], render();
   for (const k of TABS) { $("m-" + k).setAttribute("aria-pressed", k === m); $("m-" + k).hidden = !state.tabs.includes(k); $(`f-${k}-price`).closest("fieldset").hidden = !state.tabs.includes(k); }
   $("tabs").hidden = state.tabs.length < 2;
@@ -403,17 +541,17 @@ function render() {
   $("nextDay").disabled = sel >= today;
   renderMoney();
   for (const el of document.querySelectorAll(".nic")) el.hidden = m === "alcohol";
-  $("alc").hidden = m !== "alcohol";
+  $("alc").hidden = $("alc2").hidden = m !== "alcohol";
   if (m === "alcohol") return renderAlcohol();
   const M = MODES[m], d = day(), n = d[m], lim = d.limits[m], over = n > lim, when = sel === today ? " today" : "";
-  $("count").innerHTML = `${n}<small>/${lim}</small>`;
-  $("mgToday").textContent = `${r1(d.mg)} mg nicotine${when}`;
-  $("meter").classList.toggle("over", over);
-  $("meter").firstElementChild.style.width = Math.min(100, lim ? n / lim * 100 : 100) + "%";
+  $("count").textContent = n;
+  $("ofLine").innerHTML = `of <b>${lim}</b> ${planned(sel, m) != null ? "on your plan" : "daily limit"}`;
+  ring(n, lim);
   const st = $("status");
   st.classList.toggle("over", over);
-  st.textContent = over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left${when}`;
-  $("plus").textContent = `+1 ${M.one}`;
+  st.textContent = `${over ? `${n - lim} over the limit` : n === lim ? "Limit reached" : `${lim - n} left${when}`} · ${r1(d.mg)} mg nicotine`;
+  $("plusTxt").textContent = `+1 ${M.one}`;
+  $("plusIco").setAttribute("href", "#i-" + M.one);
   $("minus").disabled = n === 0;
   const pl = planned(today, m);
   $("limitOut").textContent = limitsOn(today)[m];
@@ -424,19 +562,44 @@ function render() {
   $("unitTitle").firstChild.textContent = `${M.many[0].toUpperCase() + M.many.slice(1)} per day `;
   renderCharts();
   renderCal();
+  renderWeek();
+}
+
+// One ring segment per pouch allowed (at most 40); filled up to what was used, all red when over.
+function ring(n, lim) {
+  const segs = Math.max(1, Math.min(lim, 40)), gap = segs > 1 ? 1.2 : 0, over = n > lim;
+  const filled = over ? segs : lim > 40 ? Math.round(n / lim * segs) : Math.min(n, segs);
+  for (const id of ["ringBase", "ringFill"]) $(id).setAttribute("pathLength", segs * 10);
+  $("ringBase").setAttribute("stroke-dasharray", `${10 - gap} ${gap}`);
+  $("ringFill").setAttribute("stroke-dasharray", `${`${10 - gap} ${gap} `.repeat(filled)}0 ${(segs - filled) * 10 + 1}`);
+  $("ringFill").setAttribute("stroke", over ? "var(--over)" : "var(--accent)");
+}
+
+// Mon–Sun of the week being shown: logged days as bars, later days as the limit to come.
+function renderWeek() {
+  const m = state.mode, x = new Date(sel + "T12:00"), mon = shift(sel, -((x.getDay() + 6) % 7)), ks = [...Array(7)].map((_, i) => shift(mon, i));
+  const vals = ks.map(k => { const r = nicRow(state.days[k]); return k > today ? { k, lim: limitsOn(k)[m], fut: true } : { k, v: r ? r[m] : null, lim: r ? r.limits[m] : limitsOn(k)[m] }; });
+  const top = Math.max(1, ...vals.map(o => Math.max(o.v ?? 0, o.lim)));
+  const logged = vals.filter(o => o.v != null);
+  $("weekInfo").textContent = logged.length ? `${logged.filter(o => o.v <= o.lim).length} of ${logged.length} days ${state.plan?.mode === m ? "on plan" : "in limit"}` : "";
+  $("week").innerHTML = vals.map((o, i) => {
+    const cls = o.fut ? "fut" : o.v == null ? "none" : o.v > o.lim ? "over" : "";
+    const h = 22 + 78 * (o.fut || o.v == null ? o.lim : o.v) / top;
+    return `<button class="${cls}${o.k === sel ? " now" : ""}" data-k="${o.k}"${o.fut ? " disabled" : ""} aria-label="${o.k}${o.v != null ? `, ${o.v} logged` : ""}, limit ${o.lim}"><i style="height:${h}%">${o.fut ? o.lim : o.v ?? ""}</i>${"MTWTFSS"[i]}</button>`;
+  }).join("");
 }
 
 function renderCal() {
   const m = state.mode, p = state.plan, [y, mo] = cal.split("-").map(Number), first = new Date(y, mo - 1, 1), n = new Date(y, mo, 0).getDate();
-  $("planInfo").textContent = p ? `${p.from} → 0 ${MODES[p.mode].many} by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "no plan yet";
+  $("planInfo").textContent = p ? `0 ${MODES[p.mode].many} by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "no plan yet";
   $("planBtn").textContent = p ? "New plan" : "Make a plan";
   $("planDel").hidden = !p;
-  $("calTitle").textContent = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  $("calTitle").textContent = first.toLocaleDateString("en-GB", { month: "long", ...(y !== new Date().getFullYear() && { year: "numeric" }) });
   let s = ["M", "T", "W", "T", "F", "S", "S"].map(w => `<span class="wd">${w}</span>`).join("") + "<span></span>".repeat((first.getDay() + 6) % 7);
   for (let i = 1; i <= n; i++) {
     const k = `${cal}-${pad(i)}`, r = nicRow(state.days[k]), v = r && r[m], t = planned(k, m);
     const cls = [r ? (v > r.limits[m] ? "over" : "ok") : "", k === today ? "today" : "", k === sel ? "sel" : ""].join(" ");
-    s += `<button class="cd ${cls}" data-k="${k}"${k > today ? " disabled" : ""} aria-label="${k}${r ? `, ${v} logged` : ""}${t != null ? `, plan ${t}` : ""}"><i>${i}</i><b>${r ? v : ""}</b><small>${t != null ? "→" + t : ""}</small></button>`;
+    s += `<button class="cd ${cls}" data-k="${k}"${k > today ? " disabled" : ""} aria-label="${k}${r ? `, ${v} logged` : ""}${t != null ? `, plan ${t}` : ""}"><i>${i}</i><b>${r ? v : t ?? ""}</b></button>`;
   }
   $("cal").innerHTML = s;
 }
@@ -452,12 +615,12 @@ function chart(svg, rows, dates, valueOf, limitOf, color) {
     if (r) {
       const v = valueOf(r), lim = limitOf && limitOf(r);
       const fill = typeof color === "function" ? color(v, lim) : color;
-      s += `<rect x="${x + 1.5}" y="${y(v)}" width="${bw - 3}" height="${y(0) - y(v)}" rx="2" fill="${fill}" opacity="${dates[i] === today ? 1 : .8}"><title>${dates[i]}: ${r1(v)}${lim != null ? ` (limit ${lim})` : ""}</title></rect>`;
+      s += `<rect x="${x + 1.5}" y="${y(v)}" width="${bw - 3}" height="${y(0) - y(v)}" rx="3" fill="${fill}" opacity="${dates[i] === today ? 1 : .8}"><title>${dates[i]}: ${r1(v)}${lim != null ? ` (limit ${lim})` : ""}</title></rect>`;
       if (lim != null) path += `${path ? "L" : "M"}${x} ${y(lim)} H${x + bw}`;
     }
     if (i % 7 === (n - 1) % 7) s += `<text x="${i === n - 1 ? W : x + bw / 2}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${dates[i].slice(8)}/${dates[i].slice(5, 7)}</text>`;
   });
-  if (path) s += `<path d="${path}" fill="none" stroke="var(--fg)" stroke-width="1.2" stroke-dasharray="3 3" opacity=".6"/>`;
+  if (path) s += `<path d="${path}" fill="none" stroke="var(--fg)" stroke-width="1.2" stroke-dasharray="3 3" opacity=".5"/>`;
   svg.innerHTML = s;
 }
 
@@ -486,31 +649,31 @@ function renderMoney() {
   $("saved").hidden = !keys.length;
   $("moneyRows").hidden = keys.length < 2;
   $("saved").textContent = fmt(keys.reduce((t, k) => t + s[k], 0));
-  $("moneySince").textContent = keys.length ? `since ${new Date(sinceOf() + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "";
-  $("moneyRows").innerHTML = keys.map(k => `<div class="stat"><b>${fmt(s[k])}</b><span>${k}</span></div>`).join("");
+  $("moneySince").textContent = keys.length ? `Saved since ${new Date(sinceOf() + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(sinceOf() < today.slice(0, 4) && { year: "numeric" }) })}` : "Money saved";
+  $("moneyRows").innerHTML = keys.map(k => `<span>${k[0].toUpperCase() + k.slice(1)} ${fmt(s[k])}</span>`).join("");
 }
 
 function renderAlcohol() {
   const [vf, vu, vdp] = VOL[state.measure];
   $("cUnit").textContent = vu;
   Object.assign($("cMl"), { step: 10 ** -vdp, min: 10 ** -vdp, max: Math.round(5000 / vf) });
-  $("drinkBtns").innerHTML = DRINKS.map(([n, ml, abv], i) => `<button data-i="${i}">${n} · <b>${r1(unitsOf(ml, abv))} u</b><span>${vol(ml)} · ${abv}%</span></button>`).join("");
+  $("drinkBtns").innerHTML = DRINKS.map(([n, ml, abv, ico], i) => `<button data-i="${i}" aria-label="Add ${n}, ${r1(unitsOf(ml, abv))} units"><span class="t"><svg class="ico" aria-hidden="true"><use href="#i-${ico}"/></svg><span>${r1(unitsOf(ml, abv)).toFixed(1)}<small> u</small></span></span><b>${n}</b><span class="v">${vol(ml)} · ${abv}%</span></button>`).join("");
   // Rounded first, so the warnings agree with the numbers on screen.
   const d = day(), u = r1(units(d)), lim = d.limits.alcohol ?? state.limits.alcohol, W = state.weekly, wk = r1(weekUnits(sel));
   const when = sel === today ? " today" : "", drinks = d.drinks || [];
-  $("units").innerHTML = `${r1(u)}<small>/${lim}</small>`;
-  $("wkLine").textContent = `units${when} · ${r1(wk)} of ${W} this week`;
-  for (const [id, v, l] of [["dMeter", u, lim], ["wMeter", wk, W]]) {
-    $(id).classList.toggle("over", v > 0 && v >= l);
-    $(id).firstElementChild.style.width = Math.min(100, l ? v / l * 100 : 100) + "%";
-  }
+  $("aWhen").textContent = when ? "Today" : new Date(sel + "T12:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
+  $("logTitle").textContent = when ? "Today's drinks" : "Drinks that day";
+  $("units").innerHTML = `${r1(u)}<small> ${u === 1 ? "unit" : "units"}</small>`;
+  $("wkUnits").textContent = r1(wk); $("wkLim").textContent = W;
+  $("wMeter").classList.toggle("over", wk > 0 && wk >= W);
+  $("wMeter").firstElementChild.style.width = Math.min(100, W ? wk / W * 100 : 100) + "%";
   // Warn as soon as a limit is reached, not only once it is passed.
   const warn = [];
-  if (u > 0 && u >= lim) warn.push(u > lim ? `${r1(u - lim)} units over the daily limit` : "Daily limit reached");
-  if (wk > 0 && wk >= W) warn.push(wk > W ? `${r1(wk - W)} units over the weekly limit` : "Weekly limit reached");
+  if (u > 0 && u >= lim) warn.push(u > lim ? `${r1(u - lim)} over your daily limit of ${lim}` : "Daily limit reached");
+  if (wk > 0 && wk >= W) warn.push(wk > W ? `${r1(wk - W)} over your weekly limit` : "Weekly limit reached");
   const st = $("aStatus");
   st.classList.toggle("over", warn.length > 0);
-  st.textContent = warn.length ? "⚠ " + warn.join(" · ") : d.dry ? "Dry day ✓" : `${r1(lim - u)} units left${when}`;
+  st.textContent = warn.length ? warn.join(" · ") : d.dry ? "Dry day ✓" : `${r1(lim - u)} of ${lim} units left${when}`;
   $("dlog").innerHTML = drinks.map((x, i) => `<li><span>${esc(x.n)}</span><b>${r1(x.u)} u</b><button data-i="${i}" aria-label="Remove ${esc(x.n)}">×</button></li>`).join("");
   $("dryDay").hidden = drinks.length > 0;
   $("dryDay").textContent = d.dry ? "Dry day ✓ · tap to undo" : "Mark as a dry day";
@@ -597,13 +760,13 @@ $("wLimDown").onclick = () => setWeekly(-1);
 const moveCal = n => { const [y, m] = cal.split("-").map(Number); cal = keyOf(new Date(y, m - 1 + n, 1)).slice(0, 7); renderCal(); };
 $("calPrev").onclick = () => moveCal(-1);
 $("calNext").onclick = () => moveCal(1);
-$("cal").onclick = e => { const b = e.target.closest(".cd"); if (b && !b.disabled) goTo(b.dataset.k); };
+$("cal").onclick = $("week").onclick = e => { const b = e.target.closest("[data-k]"); if (b && !b.disabled) goTo(b.dataset.k); };
 render();
 
 // Setup: current use + quit date → a plan. Shown once on first launch, then from the Plan panel.
 let smode;
 const markSmode = () => document.querySelectorAll("[data-smode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.smode === smode));
-document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); });
+document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); drawTaper(); });
 let what = [];
 const markWhat = () => { document.querySelectorAll("[data-what]").forEach(b => b.setAttribute("aria-pressed", what.includes(b.dataset.what))); $("whatNext").disabled = !what.length; };
 document.querySelectorAll("[data-what]").forEach(b => b.onclick = () => { const k = b.dataset.what; what = what.includes(k) ? what.filter(x => x !== k) : [...what, k]; markWhat(); });
@@ -620,9 +783,32 @@ function openSetup(step) {
   $("sFrom").value = state.plan?.from || state.limits[smode];
   $("sEnd").min = shift(today, 1);
   $("sEnd").value = state.plan?.end > today ? state.plan.end : shift(today, 56);
+  $("planStep").textContent = $("setup").open ? "Step 2 of 2" : "Quit plan";
   $("setup").returnValue = "";
   if (!$("setup").open) $("setup").showModal();
+  drawTaper();
 }
+// Preview of the plan: the same staircase planned() will follow, from today to the quit date.
+function drawTaper() {
+  const f = Math.round(+$("sFrom").value), end = $("sEnd").value, n = daysBetween(today, end), M = MODES[smode] || MODES.pouches;
+  if (!(f > 0 && n > 0)) { $("taper").innerHTML = ""; $("taperNote").innerHTML = ""; return; }
+  const W = 340, T = 24, B = 160, x = i => i / n * (W - 8), y = v => B - (B - T) * v / f;
+  let d = `M0 ${y(f)}`, prev = f;
+  for (let i = 1; i <= n; i++) { const v = Math.max(0, Math.ceil(f * (n - i) / n)); if (v !== prev) { d += ` H${x(i)} V${y(v)}`; prev = v; } }
+  d += ` H${W}`;
+  const fmt = k => new Date(k + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  $("taper").innerHTML = `<path d="M0 ${B}H${W}" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+    <path d="${d} V${B} H0Z" fill="var(--accent)" fill-opacity=".08"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="4" cy="${y(f)}" r="5.5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.4"/><circle cx="${W - 6}" cy="${B}" r="6.5" fill="var(--over)"/>
+    <text x="16" y="${y(f) - 6}">${f}</text><text x="${W - 4}" y="${B - 16}" text-anchor="end" font-style="italic" fill="var(--over)">0</text>
+    <text class="x" x="0" y="${B + 24}">${fmt(today)}</text><text class="x" x="${W}" y="${B + 24}" text-anchor="end">${fmt(end)}</text>`;
+  const every = n / f;
+  $("taperNote").innerHTML = every >= 1.5 ? `<b>−1</b><span>One fewer ${M.one} a day,<br>about every ${Math.round(every)} days.</span>`
+    : `<b>−${r1(f / n)}</b><span>${M.many[0].toUpperCase() + M.many.slice(1)} a day, fewer<br>every day.</span>`;
+}
+$("sFrom").oninput = $("sEnd").oninput = drawTaper;
+$("sUp").onclick = () => { $("sFrom").value = Math.min(100, (+$("sFrom").value || 0) + 1); drawTaper(); };
+$("sDown").onclick = () => { $("sFrom").value = Math.max(1, (+$("sFrom").value || 2) - 1); drawTaper(); };
 $("setup").onclose = () => {
   if ($("setup").returnValue === "plan") {
     state.plan = { mode: smode, from: Math.round(+$("sFrom").value), start: today, end: $("sEnd").value };
@@ -637,7 +823,7 @@ if (!state.setup) openSetup("what");
 $("pCur").innerHTML = CURRENCIES.map(c => `<option>${c}</option>`).join("");
 function fillPrefs() {
   for (const m of TABS) $("t-" + m).checked = state.tabs.includes(m);
-  $("pMeasure").value = state.measure;
+  for (const r of document.getElementsByName("measure")) r.checked = r.value === state.measure;
   $("pCur").value = state.money.currency;
   $("pSince").value = sinceOf(); $("pSince").max = today;
   for (const m of TABS) for (const f of ["price", "per", "before"]) { const el = $(`f-${m}-${f}`); if (el) el.value = (f === "before" ? beforeOf(m) : state.money[m][f]) ?? ""; }
@@ -646,7 +832,8 @@ $("prefs").oninput = () => {
   const v = id => $(id)?.value;
   const t = TABS.filter(m => $("t-" + m).checked);
   if (t.length) state.tabs = t; else for (const m of state.tabs) $("t-" + m).checked = true; // keep at least one
-  state.measure = VOL[v("pMeasure")] ? v("pMeasure") : "ml";
+  const ms = document.querySelector("[name=measure]:checked")?.value;
+  state.measure = VOL[ms] ? ms : "ml";
   state.money = cleanMoney({ currency: v("pCur"), since: v("pSince"), ...Object.fromEntries(TABS.map(m => [m, { price: v(`f-${m}-price`), per: v(`f-${m}-per`), before: v(`f-${m}-before`) }])) });
   saveLocal(); render();
 };
