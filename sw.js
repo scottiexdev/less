@@ -1,5 +1,5 @@
 // Offline support: serve the app shell from cache, refresh it in the background.
-const CACHE = "less-v7";
+const CACHE = "less-v8";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png",
   "fonts/instrument-serif.woff2", "fonts/instrument-serif-italic.woff2", "fonts/manrope.woff2"];
 
