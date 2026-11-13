@@ -33,7 +33,7 @@ There is no server and no account. What you log never leaves the device. Everyth
 
 ## Support
 
-If this helps you cut down, you can buy me a coffee: [Support this app](DONATE_LINK_HERE)
+If this helps you cut down, you can buy me a coffee: [Donate with PayPal](https://www.paypal.com/qrcodes/managed/c189142f-aba7-441a-ac65-a644cdb7b9a0?utm_source=consweb_more)
 
 ## Run it yourself
 
@@ -41,7 +41,7 @@ It's plain HTML, CSS and JavaScript with no build step. Serve the folder with an
 
 ## Setting up the donation link
 
-Open `index.html`, find `const DONATE_URL = "";` near the top of the script and paste your page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors). The "Support this app" link appears in the footer only when it's set. Replace `DONATE_LINK_HERE` above with the same URL.
+The *Support Less* section at the bottom of the app shows `donate-qr.png` (a PayPal QR code) and a button to the same link, `DONATE_URL` near the top of the script in `index.html`. To use your own, replace the image and the URL; an empty `DONATE_URL` hides the section.
 
 ## Counting visitors
 

@@ -114,6 +114,10 @@ h2 span { font-size: .88rem; font-weight: 600; letter-spacing: 0; text-transform
 .data .note { margin-top: 10px; }
 .install { font-size: .9rem; line-height: 1.45; background: var(--accent-soft); border-radius: 18px; padding: 14px 16px; margin: 0; }
 .install b { color: var(--accent); }
+.support { display: grid; grid-template-columns: 128px 1fr; gap: 16px; align-items: center; background: var(--surface); border-radius: 22px; padding: 14px; }
+.support img { width: 128px; height: 128px; border-radius: 14px; background: #fff; display: block; }
+.support p { margin: 0 0 12px; font-size: .92rem; line-height: 1.45; color: var(--muted); }
+.donate { white-space: nowrap; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 23px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
 .foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 a { color: var(--accent); }
 /* Plan calendar */
@@ -385,7 +389,14 @@ form.setup { padding: 0; }
     </div>
     <p class="note" id="dataMsg" role="status"></p>
   </section>
-  <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
+  <section class="panel" id="support" hidden>
+    <h2>Support Less</h2>
+    <div class="support">
+      <img src="donate-qr.png" alt="PayPal QR code: scan it with another phone to donate" width="128" height="128" loading="lazy">
+      <div><p>Less is free, with no ads and no tracking. If it helps you cut down, you can buy me a coffee.</p><a class="donate" id="donate" href="#" target="_blank" rel="noopener">Donate</a></div>
+    </div>
+  </section>
+  <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a></p>
 </div>
 
 <dialog id="setup" aria-label="Get started">
@@ -463,8 +474,8 @@ form.setup { padding: 0; }
 <script>
 // Visit counter: sign up at goatcounter.com (free, no cookies) and put your site code here, e.g. "scottiex-less". Empty = no counting.
 const GOATCOUNTER = "";
-// Your donation page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors…). Leave empty to hide the link.
-const DONATE_URL = "";
+// Your donation page (here the PayPal link inside donate-qr.png). Leave empty to hide the Support section.
+const DONATE_URL = "https://www.paypal.com/qrcodes/managed/c189142f-aba7-441a-ac65-a644cdb7b9a0?utm_source=consweb_more";
 const LS = "nicotine-v2";
 const MODES = {
   pouches: { one: "pouch", many: "pouches", strStep: 1, strHint: "mg per pouch, from the can" },
@@ -873,7 +884,7 @@ if (GOATCOUNTER) {
   g.async = true; g.src = "https://gc.zgo.at/count.js"; g.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
   document.head.append(g);
 }
-if (DONATE_URL) { $("donate").href = DONATE_URL; $("donate").hidden = false; }
+if (DONATE_URL) { $("donate").href = DONATE_URL; $("support").hidden = false; }
 // iOS Safari: suggest installing, since non-installed sites can lose localStorage after 7 idle days.
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 if (isIOS && !navigator.standalone) $("iosHint").hidden = false;
