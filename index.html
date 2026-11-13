@@ -114,6 +114,10 @@ h2 span { font-size: .88rem; font-weight: 600; letter-spacing: 0; text-transform
 .data .note { margin-top: 10px; }
 .install { font-size: .9rem; line-height: 1.45; background: var(--accent-soft); border-radius: 18px; padding: 14px 16px; margin: 0; }
 .install b { color: var(--accent); }
+.support { display: grid; grid-template-columns: 128px 1fr; gap: 16px; align-items: center; background: var(--surface); border-radius: 22px; padding: 14px; }
+.support img { width: 128px; height: 128px; border-radius: 14px; background: #fff; display: block; }
+.support p { margin: 0 0 12px; font-size: .92rem; line-height: 1.45; color: var(--muted); }
+.donate { white-space: nowrap; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 23px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
 .foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 a { color: var(--accent); }
 /* Plan calendar */
@@ -177,13 +181,18 @@ form.setup { padding: 0; }
 .acts { display: grid; grid-template-columns: 110px 1fr; gap: 10px; margin-top: auto; padding-top: 12px; }
 .acts button { height: 56px; border-radius: 28px; font-weight: 700; font-size: 1.06rem; background: none; }
 .acts .plus { background: var(--accent); }
-#prefsDlg { width: 100%; max-width: 480px; max-height: 92dvh; margin: auto auto 0; border-radius: 30px 30px 0 0; padding: 10px 24px max(24px, env(safe-area-inset-bottom, 0px)); overflow: auto; }
-#prefsDlg[open] { animation: rise .28s cubic-bezier(.2, .8, .2, 1); }
+#prefsDlg, #askDlg { width: 100%; max-width: 480px; max-height: 92dvh; margin: auto auto 0; border-radius: 30px 30px 0 0; padding: 10px 24px max(24px, env(safe-area-inset-bottom, 0px)); overflow: auto; }
+#prefsDlg[open], #askDlg[open] { animation: rise .28s cubic-bezier(.2, .8, .2, 1); }
 @keyframes rise { from { transform: translateY(40%); opacity: 0; } }
-#prefsDlg::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
+#prefsDlg::before, #askDlg::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
 .dlghead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .dlghead h2 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 2.5rem; letter-spacing: 0; text-transform: none; color: var(--fg); }
 .dlghead .icon { width: 36px; height: 36px; color: var(--muted); }
+#askDlg p { margin: 0 0 20px; font-size: 1rem; line-height: 1.5; color: var(--muted); }
+.askacts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+.askacts button { height: 50px; border-radius: 25px; font-weight: 700; }
+.askacts .donate { height: 50px; border-radius: 25px; justify-content: center; }
+.linkbtn { display: block; margin: 14px auto 0; background: none; color: var(--muted); font-size: .88rem; font-weight: 600; text-decoration: underline; padding: 8px; }
 .prefs { display: grid; gap: 18px; }
 .prefs .lbl { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 -8px; }
 .prefs select, .prefs input { font: inherit; font-weight: 700; color: var(--fg); min-width: 0; }
@@ -385,7 +394,14 @@ form.setup { padding: 0; }
     </div>
     <p class="note" id="dataMsg" role="status"></p>
   </section>
-  <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a><a id="donate" href="#" target="_blank" rel="noopener" hidden>Support this app ♥</a></p>
+  <section class="panel" id="support" hidden>
+    <h2>Support Less</h2>
+    <div class="support">
+      <img src="donate-qr.png" alt="PayPal QR code: scan it with another phone to donate" width="128" height="128" loading="lazy">
+      <div><p>Less is free, with no ads and no tracking. If it helps you cut down, you can buy me a coffee.</p><a class="donate" id="donate" href="#" target="_blank" rel="noopener">Donate</a></div>
+    </div>
+  </section>
+  <p class="note foot"><a href="https://github.com/scottiexdev/less">Open source on GitHub</a></p>
 </div>
 
 <dialog id="setup" aria-label="Get started">
@@ -460,11 +476,20 @@ form.setup { padding: 0; }
     </form>
 </dialog>
 
+<dialog id="askDlg" aria-labelledby="askTitle">
+  <form method="dialog">
+    <div class="dlghead"><h2 id="askTitle">Enjoying Less?</h2><button class="icon" value="later" aria-label="Close">×</button></div>
+    <p>Less is free, with no ads and no tracking. If it's helping you cut down, a small donation keeps it going.</p>
+    <div class="askacts"><button value="later" autofocus>Not now</button><a class="donate" id="askDonate" href="#" target="_blank" rel="noopener">Donate with PayPal</a></div>
+    <button class="linkbtn" value="never">Don't ask again</button>
+  </form>
+</dialog>
+
 <script>
 // Visit counter: sign up at goatcounter.com (free, no cookies) and put your site code here, e.g. "scottiex-less". Empty = no counting.
 const GOATCOUNTER = "";
-// Your donation page (Ko-fi, Buy Me a Coffee, PayPal.me, GitHub Sponsors…). Leave empty to hide the link.
-const DONATE_URL = "";
+// Your donation page (here the PayPal link inside donate-qr.png). Leave empty to hide the Support section.
+const DONATE_URL = "https://www.paypal.com/qrcodes/managed/c189142f-aba7-441a-ac65-a644cdb7b9a0?utm_source=consweb_more";
 const LS = "nicotine-v2";
 const MODES = {
   pouches: { one: "pouch", many: "pouches", strStep: 1, strHint: "mg per pouch, from the can" },
@@ -873,7 +898,22 @@ if (GOATCOUNTER) {
   g.async = true; g.src = "https://gc.zgo.at/count.js"; g.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
   document.head.append(g);
 }
-if (DONATE_URL) { $("donate").href = DONATE_URL; $("donate").hidden = false; }
+if (DONATE_URL) { $("donate").href = $("askDonate").href = DONATE_URL; $("support").hidden = false; }
+// Donation popup: only after a week of logged days, then at most once a month (every 3 months after Donate), never after "Don't ask again".
+// Kept out of `state` so it doesn't travel in backups.
+const ASK = "less-donate";
+const askState = () => { try { return JSON.parse(localStorage.getItem(ASK)) || {}; } catch { return {}; } };
+$("askDonate").onclick = () => $("askDlg").close("donate");
+$("askDlg").onclose = () => {
+  const r = $("askDlg").returnValue;
+  try { localStorage.setItem(ASK, JSON.stringify(r === "never" ? { never: true } : { next: shift(today, r === "donate" ? 90 : 30) })); } catch {}
+};
+setTimeout(() => {
+  const a = askState();
+  if (!DONATE_URL || !state.setup || a.never || (a.next && a.next > today) || Object.keys(state.days).length < 7) return;
+  if (document.querySelector("dialog[open]")) return;
+  $("askDlg").returnValue = ""; $("askDlg").showModal();
+}, 2500);
 // iOS Safari: suggest installing, since non-installed sites can lose localStorage after 7 idle days.
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 if (isIOS && !navigator.standalone) $("iosHint").hidden = false;
