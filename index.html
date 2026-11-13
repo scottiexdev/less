@@ -537,9 +537,12 @@ form.setup { padding: 0; }
         <label>A day, before<input type="number" id="f-pouches-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
       </fieldset>
       <fieldset><legend>Cigarettes</legend>
-        <label>Price of a pack<input type="number" id="f-cigarettes-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
-        <label>Cigarettes in a pack<input type="number" id="f-cigarettes-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
+        <label class="sw"><span>I roll my own</span><input type="checkbox" id="f-cigarettes-roll"></label>
+        <label><span id="cigPriceLbl">Price of a pack</span><input type="number" id="f-cigarettes-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label id="cigPerRow">Cigarettes in a pack<input type="number" id="f-cigarettes-per" min="1" step="1" placeholder="20" inputmode="numeric"></label>
+        <label id="cigEveryRow" hidden>Bought every, days<input type="number" id="f-cigarettes-every" min="1" max="365" step="1" inputmode="numeric" placeholder="7"></label>
         <label>A day, before<input type="number" id="f-cigarettes-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
+        <p class="hint" id="rollHint" hidden>What you spend each time you buy tobacco, papers and filters, and how many days it lasted when you smoked as much as before.</p>
       </fieldset>
       <fieldset><legend>Alcohol</legend>
         <label>Price of a unit<input type="number" id="f-alcohol-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
@@ -623,7 +626,9 @@ const num = (v, max) => { v = +v; return v > 0 && v <= max ? v : undefined; };
 const cleanMoney = x => ({
   currency: CURRENCIES.includes(x?.currency) ? x.currency : "EUR",
   since: /^\d{4}-\d{2}-\d{2}$/.test(x?.since) && x.since >= "2000-01-01" ? x.since : undefined,
-  ...Object.fromEntries(TABS.map(m => [m, { price: num(x?.[m]?.price, 1000), per: num(x?.[m]?.per, 1000), before: num(x?.[m]?.before, 1000) }])),
+  ...Object.fromEntries(TABS.map(m => [m, { price: num(x?.[m]?.price, 1000), per: num(x?.[m]?.per, 1000), before: num(x?.[m]?.before, 1000),
+    // Rolling tobacco: no pack size; the price covers what one purchase lasts (`every` days at the "before" rate).
+    ...(m === "cigarettes" && { roll: x?.[m]?.roll === true, every: num(x?.[m]?.every, 365) }) }])),
 });
 // UK units: ml × ABV% ÷ 1000.
 const DRINKS = [["Pint of beer", 568, 4, "pint"], ["Glass of wine", 175, 12, "glass"], ["Can of beer", 440, 5, "can"], ["Single spirit", 25, 40, "shot"],
@@ -774,7 +779,7 @@ function saved() {
   const out = {};
   for (const m of state.tabs) {
     // Alcohol and vaping: price per unit or refill, "before" per week. Nicotine: price per can or pack, "before" per day.
-    const c = state.money[m], before = beforeOf(m), wk = !MODES[m], price = wk ? c.price : c.price / (c.per || 20);
+    const c = state.money[m], before = beforeOf(m), wk = !MODES[m], per = c.roll ? (c.every || 0) * (before || 0) : c.per || 20, price = wk ? c.price : per && c.price / per;
     if (!price || !before) continue;
     let t = 0;
     for (let k = sinceOf(); k <= today; k = shift(k, 1)) { const r = state.days[k]; t += ((wk ? before / 7 : before) - (m === "alcohol" ? units(r) : m === "vaping" ? tanks(r) : r ? r[m] : 0)) * price; }
@@ -1019,12 +1024,19 @@ $("planDel").onclick = $("vPlanDel").onclick = () => { if (confirm("Remove the p
 if (!state.setup) openSetup("what");
 
 $("pCur").innerHTML = CURRENCIES.map(c => `<option>${c}</option>`).join("");
+function rollUI() {
+  const roll = $("f-cigarettes-roll").checked;
+  $("cigPriceLbl").textContent = roll ? "Price of tobacco, papers, filters" : "Price of a pack";
+  $("cigPerRow").hidden = roll; $("cigEveryRow").hidden = $("rollHint").hidden = !roll;
+}
 function fillPrefs() {
   for (const m of TABS) $("t-" + m).checked = state.tabs.includes(m);
   for (const r of document.getElementsByName("measure")) r.checked = r.value === state.measure;
   $("pCur").value = state.money.currency;
   $("pSince").value = sinceOf(); $("pSince").max = today;
-  for (const m of TABS) for (const f of ["price", "per", "before"]) { const el = $(`f-${m}-${f}`); if (el) el.value = (f === "before" ? beforeOf(m) : state.money[m][f]) ?? ""; }
+  for (const m of TABS) for (const f of ["price", "per", "before", "every"]) { const el = $(`f-${m}-${f}`); if (el) el.value = (f === "before" ? beforeOf(m) : state.money[m][f]) ?? ""; }
+  $("f-cigarettes-roll").checked = state.money.cigarettes.roll;
+  rollUI();
 }
 $("prefs").oninput = () => {
   const v = id => $(id)?.value;
@@ -1032,7 +1044,8 @@ $("prefs").oninput = () => {
   if (t.length) state.tabs = t; else for (const m of state.tabs) $("t-" + m).checked = true; // keep at least one
   const ms = document.querySelector("[name=measure]:checked")?.value;
   state.measure = VOL[ms] ? ms : "ml";
-  state.money = cleanMoney({ currency: v("pCur"), since: v("pSince"), ...Object.fromEntries(TABS.map(m => [m, { price: v(`f-${m}-price`), per: v(`f-${m}-per`), before: v(`f-${m}-before`) }])) });
+  state.money = cleanMoney({ currency: v("pCur"), since: v("pSince"), ...Object.fromEntries(TABS.map(m => [m, { price: v(`f-${m}-price`), per: v(`f-${m}-per`), before: v(`f-${m}-before`), roll: $(`f-${m}-roll`)?.checked, every: v(`f-${m}-every`) }])) });
+  rollUI();
   saveLocal(); render();
 };
 fillPrefs();
