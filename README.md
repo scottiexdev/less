@@ -24,7 +24,13 @@ A tiny, private web app to cut down on nicotine and alcohol. Count your pouches 
 
 ## Privacy
 
-There is no server and no account. What you log never leaves the device. Everything is stored in your browser's `localStorage` on your device. Use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
+Less is published by **ScottieLabs**, the data controller under the GDPR. Contact: scottiexdev@gmail.com. The full notice is in the app (*Privacy*, at the bottom of the page).
+
+- **What you log never leaves the device.** There is no server and no account. Everything is stored in your browser's `localStorage`. ScottieLabs never receives it.
+- **No third parties on load.** No cookies, no analytics, no ads. Fonts (SIL Open Font License, see `fonts/OFL.txt`) and images are served from this site.
+- **Hosting:** GitHub Pages logs visitors' IP addresses, as any web server does ([GitHub privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement)).
+- **Donations** go through PayPal only when someone taps Donate or scans the QR code.
+- **Backups:** use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
 
 ## Notes on the numbers
 

@@ -1,6 +1,7 @@
 // Offline support: serve the app shell from cache, refresh it in the background.
-const CACHE = "less-v6";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
+const CACHE = "less-v7";
+const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png",
+  "fonts/instrument-serif.woff2", "fonts/instrument-serif-italic.woff2", "fonts/manrope.woff2"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -13,7 +14,7 @@ self.addEventListener("fetch", e => {
   e.respondWith(caches.open(CACHE).then(async cache => {
     const cached = await cache.match(e.request);
     const fresh = fetch(e.request).then(res => {
-      if (res.ok && (new URL(e.request.url).origin === location.origin || e.request.url.includes("fonts.g"))) cache.put(e.request, res.clone());
+      if (res.ok && new URL(e.request.url).origin === location.origin) cache.put(e.request, res.clone());
       return res;
     }).catch(() => cached);
     return cached || fresh;
