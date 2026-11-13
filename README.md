@@ -6,11 +6,12 @@ A tiny, private web app to cut down on nicotine and alcohol. Count your pouches 
 
 ## Features
 
-- **Pick what you track**: the first screen asks "Less of what?" (pouches, cigarettes, alcohol); only those get a tab. Change it later in *Settings* (the button next to the date).
-- **Money saved**: enter the price of a can, a pack or an alcohol unit and how much you used before (pre-filled from a quit plan). Saved = (before − logged) × price, every day since a start date, per tracker and in total.
+- **Pick what you track**: the first screen asks "Less of what?" (pouches, cigarettes, alcohol, vaping); only those get a tab. Change it later in *Settings* (the button next to the date).
+- **Money saved**: enter the price of a can, a pack, an alcohol unit or a vape refill and how much you used before (pre-filled from a quit plan). Saved = (before − logged) × price, every day since a start date, per tracker and in total.
 - **Measures**: drink volumes in ml, litres or US fl oz. Alcohol is always counted in UK units.
 - **Alcohol**: tap a drink (pint, can, glass of wine, spirit…) or enter ml and % ABV, and it is converted to UK units (ml × % ÷ 1000). Daily and weekly (Monday–Sunday) limits, with a warning as soon as either is reached. Mark dry days and see them counted over 30 days.
 - **Pouches and cigarettes** modes, each with its own counter and daily limit
+- **Vaping**: log ⅓, ½ or a full tank of liquid; the limit is refills per week (Monday–Sunday), and a quit plan lowers it half a refill at a time. Less follows one quit plan at a time.
 - **Strength in mg** per pouch (from the can) or per cigarette, so you also get total mg per day
 - **30-day charts**: units per day against your limit, and total nicotine mg per day
 - **Quit plan**: on first launch (or from the *Plan* panel) enter how many you use a day and the date you want to stop by. The app lowers the daily limit in a straight line down to 0 on that date and shows each day's target on a calendar next to what you logged. You can skip it.
@@ -41,7 +42,7 @@ It's plain HTML, CSS and JavaScript with no build step. Serve the folder with an
 
 ## Setting up the donation link
 
-The *Support Less* section at the bottom of the app shows `donate-qr.png` (a PayPal QR code) and a button to the same link, `DONATE_URL` near the top of the script in `index.html`. To use your own, replace the image and the URL; an empty `DONATE_URL` hides the section. Once someone has logged 7 days, a popup asks for a donation at most once a month (every 3 months after they tap Donate, never after "Don't ask again"); that choice is stored in `less-donate`, outside the backup.
+The *Support Less* section at the bottom of the app shows `donate-qr.png` (a PayPal QR code) and a button to the same link, `DONATE_URL` near the top of the script in `index.html`. To use your own, replace the image and the URL; an empty `DONATE_URL` hides the section. Once someone has logged 7 days, a popup asks for a donation every 2 weeks (a month after "Ask me next month", 3 months after they tap Donate); that choice is stored in `less-donate`, outside the backup.
 
 ## Counting visitors
 

@@ -156,6 +156,7 @@ form.setup { padding: 0; }
 .headline em { font-style: italic; }
 .lede { font-size: 1.05rem; line-height: 1.5; color: var(--muted); margin: 0; max-width: 18em; position: relative; }
 .orbit { position: absolute; right: -130px; top: 60px; width: 360px; height: 360px; pointer-events: none; }
+@media (max-height: 820px) { .headline { font-size: 3.6rem; margin-top: 10px; } .choices button { padding: 14px 18px; } }
 .choices { display: grid; gap: 12px; margin-top: 12px; position: relative; }
 .choices button { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 22px; text-align: left; background: var(--bg); box-shadow: 0 0 0 1.5px var(--line) inset; }
 .choices b { display: block; font-size: 1.1rem; }
@@ -240,6 +241,19 @@ form.setup { padding: 0; }
 .dlog li + li { border-top: 1px solid var(--line); }
 .dlog li span { flex: 1; }
 .dlog li button { width: 38px; height: 38px; background: none; color: var(--muted); font-size: 1.3rem; }
+/* Vaping */
+.vadds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vadds button { display: grid; justify-items: center; gap: 2px; padding: 14px 6px 12px; border-radius: 20px; }
+.vadds .serif { font-size: 2.2rem; line-height: 1; margin-top: 6px; }
+.vadds small { font-size: .82rem; font-weight: 600; color: var(--muted); }
+.vplan { background: var(--surface); border-radius: 20px; padding: 0 16px; }
+.vplan div { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; font-weight: 600; }
+.vplan div + div { border-top: 1px solid var(--line); }
+.vplan b { font-family: var(--serif); font-weight: 400; font-size: 1.4rem; }
+.vplan .ok b { color: var(--accent); }
+.vplan .over b { color: var(--over); }
+.vplan .fut { color: var(--muted); }
+.vplan .now { font-weight: 800; }
 .ghost { padding: 14px; font-weight: 700; border-radius: 28px; background: none; box-shadow: 0 0 0 1.5px var(--line) inset; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
@@ -253,6 +267,7 @@ form.setup { padding: 0; }
   <symbol id="i-can" viewBox="0 0 26 26"><rect x="7" y="3.5" width="12" height="19" rx="3"/><path d="M7 7.5h12M7 18.5h12"/></symbol>
   <symbol id="i-bottle" viewBox="0 0 26 26"><path d="M11 3h4v4.5c2.2 1 3 2.6 3 4.5v9a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 8 21v-9c0-1.9.8-3.5 3-4.5z"/><path d="M8 14h10"/></symbol>
   <symbol id="i-shot" viewBox="0 0 26 26"><path d="M8 7h10l-1.4 13.2a1.4 1.4 0 0 1-1.4 1.3h-4.4a1.4 1.4 0 0 1-1.4-1.3z"/><path d="M8.6 12.5h8.8"/></symbol>
+  <symbol id="i-vape" viewBox="0 0 26 26"><rect x="9" y="9" width="8" height="14" rx="2.2"/><path d="M11 9V5.5a2 2 0 0 1 4 0V9"/><path d="M12 13.5v4"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 8h9M18 8h2M4 16h3M12 16h8"/><circle cx="15.5" cy="8" r="2.5"/><circle cx="9.5" cy="16" r="2.5"/></symbol>
 </svg>
 <div class="wrap">
@@ -264,6 +279,7 @@ form.setup { padding: 0; }
     <button id="m-pouches" data-mode="pouches">Pouches</button>
     <button id="m-cigarettes" data-mode="cigarettes">Cigarettes</button>
     <button id="m-alcohol" data-mode="alcohol">Alcohol</button>
+    <button id="m-vaping" data-mode="vaping">Vaping</button>
   </div>
 
   <div class="daynav"><button id="prevDay" aria-label="Previous day">‹</button><input type="date" id="dayPick" aria-label="Day to edit"><button id="nextDay" aria-label="Next day">›</button></div>
@@ -305,6 +321,28 @@ form.setup { padding: 0; }
       <h2 id="logTitle">Drinks</h2>
       <ul class="dlog" id="dlog"></ul>
       <button class="ghost" id="dryDay">Mark as a dry day</button>
+    </section>
+  </div>
+
+  <div class="stack" id="vape" hidden>
+    <section class="atoday">
+      <h2 id="vWhen" style="margin:0 0 -8px">This week</h2>
+      <div class="big" id="vTotal">0</div>
+      <div class="meter" id="vMeter"><i></i></div>
+      <p class="banner" id="vStatus" role="status"></p>
+    </section>
+    <section class="panel">
+      <h2>Add a refill</h2>
+      <div class="vadds" id="vAdds">
+        <button data-s="2" aria-label="Add a third of a tank"><svg class="ico" viewBox="0 0 26 26" aria-hidden="true"><rect x="8" y="3" width="10" height="20" rx="3"/><rect x="10.5" y="15.5" width="5" height="5.0" rx="1.2" fill="currentColor" stroke="none"/></svg><span class="serif">⅓</span><small>of a tank</small></button>
+        <button data-s="3" aria-label="Add half a tank"><svg class="ico" viewBox="0 0 26 26" aria-hidden="true"><rect x="8" y="3" width="10" height="20" rx="3"/><rect x="10.5" y="13.0" width="5" height="7.5" rx="1.2" fill="currentColor" stroke="none"/></svg><span class="serif">½</span><small>of a tank</small></button>
+        <button data-s="6" aria-label="Add a full tank"><svg class="ico" viewBox="0 0 26 26" aria-hidden="true"><rect x="8" y="3" width="10" height="20" rx="3"/><rect x="10.5" y="5.5" width="5" height="15.0" rx="1.2" fill="currentColor" stroke="none"/></svg><span class="serif">1</span><small>full tank</small></button>
+      </div>
+    </section>
+    <section class="panel">
+      <h2 id="vLogTitle">Today's refills</h2>
+      <ul class="dlog" id="vLog"></ul>
+      <p class="empty" id="vEmpty" style="margin:0">Nothing logged on this day.</p>
     </section>
   </div>
 
@@ -384,6 +422,32 @@ form.setup { padding: 0; }
     </section>
   </div>
 
+  <div class="stack" id="vape2" hidden>
+    <section class="panel">
+      <h2>Limit</h2>
+      <div class="settings">
+        <div class="row">
+          <label for="vLimOut">Weekly limit<span class="hint" id="vLimHint">refills Mon–Sun</span></label>
+          <div class="ctl"><button id="vLimDown" aria-label="Lower weekly limit">−</button><output id="vLimOut">3</output><button id="vLimUp" aria-label="Raise weekly limit">+</button></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Plan <span id="vPlanInfo"></span></h2>
+      <div class="vplan" id="vPlan"></div>
+      <div class="dbtns" style="margin-top:14px"><button id="vPlanBtn">Make a plan</button><button id="vPlanDel">Remove plan</button></div>
+    </section>
+    <section class="panel">
+      <h2>Refills per week <span>last 8 weeks</span></h2>
+      <svg class="chart" id="vChart" viewBox="0 0 340 170" role="img" aria-label="Tank refills per week"></svg>
+      <div class="stats">
+        <div class="stat"><b id="vNow">–</b><span>This week</span></div>
+        <div class="stat"><b id="vPrev">–</b><span>Last week</span></div>
+        <div class="stat"><b id="vAvg">–</b><span>4-week avg</span></div>
+      </div>
+    </section>
+  </div>
+
   <section class="panel data">
     <h2>Your data <span>stays on this device</span></h2>
     <p class="empty" style="margin:0 0 14px">What you log is never sent anywhere. Export a backup now and then: clearing browser data deletes your history.</p>
@@ -418,18 +482,20 @@ form.setup { padding: 0; }
       <button type="button" data-what="pouches"><svg class="ico" aria-hidden="true"><use href="#i-pouch"/></svg><span><b>Pouches</b><small>Nicotine pouches, snus</small></span></button>
       <button type="button" data-what="cigarettes"><svg class="ico" aria-hidden="true"><use href="#i-cigarette"/></svg><span><b>Cigarettes</b><small>Rolled or from a pack</small></span></button>
       <button type="button" data-what="alcohol"><svg class="ico" aria-hidden="true"><use href="#i-glass"/></svg><span><b>Alcohol</b><small>Counted in UK units</small></span></button>
+      <button type="button" data-what="vaping"><svg class="ico" aria-hidden="true"><use href="#i-vape"/></svg><span><b>Vaping</b><small>Tank refills a week</small></span></button>
     </div>
     <div class="acts"><button value="skip" formnovalidate>Skip</button><button type="button" class="plus" id="whatNext">Next</button></div>
    </div>
    <div class="setup" id="stepPlan">
     <div class="top"><span class="serif" style="font-size:1.9rem">Less</span><span class="eyebrow" id="planStep">Step 2 of 2</span></div>
     <h2 class="headline" style="font-size:3.4rem;margin-top:8px">A plan to<br><em>stop.</em></h2>
-    <p class="lede">The daily limit goes down a little at a time until that day. You can change it any day.</p>
+    <p class="lede">The limit goes down a little at a time until that day. You can change it any day.</p>
     <div class="modes" role="group" aria-label="What do you use">
-      <button type="button" data-smode="pouches">Pouches</button><button type="button" data-smode="cigarettes">Cigarettes</button>
+      <button type="button" data-smode="pouches">Pouches</button><button type="button" data-smode="cigarettes">Cigarettes</button><button type="button" data-smode="vaping">Vaping</button>
     </div>
+    <p class="lede" id="sWarn" style="color:var(--over);font-size:.92rem" hidden></p>
     <div class="tiles">
-      <label class="tile">A day now<span class="stepper"><button type="button" id="sDown" aria-label="One fewer">−</button><input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required><button type="button" id="sUp" aria-label="One more">+</button></span></label>
+      <label class="tile"><span id="sFromLbl">A day now</span><span class="stepper"><button type="button" id="sDown" aria-label="One fewer">−</button><input type="number" id="sFrom" min="1" max="100" step="1" inputmode="numeric" required><button type="button" id="sUp" aria-label="One more">+</button></span></label>
       <label class="tile">Stop by<input type="date" id="sEnd" required></label>
     </div>
     <svg class="taper" id="taper" viewBox="0 0 340 190" aria-hidden="true"></svg>
@@ -452,6 +518,7 @@ form.setup { padding: 0; }
         <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-pouch"/></svg>Pouches</span><input type="checkbox" id="t-pouches"></label>
         <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-cigarette"/></svg>Cigarettes</span><input type="checkbox" id="t-cigarettes"></label>
         <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-glass"/></svg>Alcohol</span><input type="checkbox" id="t-alcohol"></label>
+        <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-vape"/></svg>Vaping</span><input type="checkbox" id="t-vaping"></label>
       </fieldset>
       <fieldset><legend>Money</legend>
         <label>Currency<select id="pCur"></select></label>
@@ -472,6 +539,11 @@ form.setup { padding: 0; }
         <label>Units a week, before<input type="number" id="f-alcohol-before" min="0" step="1" inputmode="numeric" placeholder="0"></label>
         <p class="hint">A 5.00 pint of beer is 2.3 units, so about 2.20 a unit.</p>
       </fieldset>
+      <fieldset><legend>Vaping</legend>
+        <label>Price of a refill<input type="number" id="f-vaping-price" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Refills a week, before<input type="number" id="f-vaping-before" min="0" step="0.5" inputmode="decimal" placeholder="0"></label>
+        <p class="hint">What the liquid for one full tank costs.</p>
+      </fieldset>
       <p class="hint">Saved = (what you used before − what you log) × price, every day since the date above. A day with nothing logged counts as none used. "Before" for the tracker with a quit plan starts from the plan. Changes save as you type and stay on this device.</p>
     </form>
 </dialog>
@@ -481,7 +553,7 @@ form.setup { padding: 0; }
     <div class="dlghead"><h2 id="askTitle">Enjoying Less?</h2><button class="icon" value="later" aria-label="Close">×</button></div>
     <p>Less is free, with no ads and no tracking. If it's helping you cut down, a small donation keeps it going.</p>
     <div class="askacts"><button value="later" autofocus>Not now</button><a class="donate" id="askDonate" href="#" target="_blank" rel="noopener">Donate with PayPal</a></div>
-    <button class="linkbtn" value="never">Don't ask again</button>
+    <button class="linkbtn" value="month">Ask me next month</button>
   </form>
 </dialog>
 
@@ -504,8 +576,16 @@ const shift = (k, n) => { const x = new Date(k + "T12:00"); x.setDate(x.getDate(
 const daysBetween = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
 let cal = today.slice(0, 7); // month shown in the plan calendar
 // day: { pouches, cigarettes, mg, limits: {pouches, cigarettes} }
-let state = { tabs: ["pouches", "cigarettes", "alcohol"], measure: "ml", money: {}, mode: "pouches", limits: { pouches: 9, cigarettes: 5, alcohol: 4 }, weekly: 14, strength: { pouches: 6, cigarettes: 1 }, days: {} };
-const TABS = [...Object.keys(MODES), "alcohol"];
+let state = { tabs: ["pouches", "cigarettes", "alcohol", "vaping"], measure: "ml", money: {}, mode: "pouches", limits: { pouches: 9, cigarettes: 5, alcohol: 4, vaping: 3 }, weekly: 14, strength: { pouches: 6, cigarettes: 1 }, days: {} };
+const TABS = [...Object.keys(MODES), "alcohol", "vaping"];
+// Trackers a quit plan can follow. Vaping counts tank refills a week, so its limit and plan are weekly.
+const PLANS = [...Object.keys(MODES), "vaping"];
+const VAPE = { one: "refill", many: "refills" };
+const nameOf = m => MODES[m] || VAPE;
+// Refills are logged in sixths of a tank (⅓ = 2, ½ = 3, full = 6), so sums stay exact.
+const tanks = r => r && r.vapes ? r.vapes.reduce((t, x) => t + x, 0) / 6 : 0;
+const frac = x => { const n = Math.round(x * 6), w = Math.floor(n / 6), f = ["", "⅙", "⅓", "½", "⅔", "⅚"][n % 6]; return (w || !f ? String(w) : "") + f; };
+const monOf = k => shift(k, -((new Date(k + "T12:00").getDay() + 6) % 7));
 // Volume shown to the user: ml per unit, label, decimals. Drinks are stored in ml.
 const VOL = { ml: [1, "ml", 0], l: [1000, "L", 3], floz: [29.5735, "fl oz", 1] };
 const vol = ml => { const [f, u, dp] = VOL[state.measure]; return `${+(ml / f).toFixed(dp)} ${u}`; };
@@ -529,7 +609,8 @@ const norm = v => v && "count" in v && !("pouches" in v)
   ? { pouches: v.count, cigarettes: 0, mg: v.count * 6, limits: { pouches: v.limit, cigarettes: 5 } }
   : { pouches: v.pouches || 0, cigarettes: v.cigarettes || 0, mg: v.mg || 0, limits: { ...state.limits, ...(v.limits || {}) },
       drinks: (Array.isArray(v.drinks) ? v.drinks : []).filter(x => x && typeof x.n === "string" && x.u >= 0 && x.u <= 100).map(x => ({ n: x.n.slice(0, 60), u: +x.u })),
-      dry: v.dry === true };
+      dry: v.dry === true,
+      vapes: (Array.isArray(v.vapes) ? v.vapes : []).filter(x => Number.isInteger(x) && x >= 1 && x <= 6) };
 
 try {
   const s = JSON.parse(localStorage.getItem(LS));
@@ -543,14 +624,16 @@ if (!cleanTabs(state.tabs)?.length) state.tabs = [...TABS]; else state.tabs = cl
 const saveLocal = () => { try { localStorage.setItem(LS, JSON.stringify(state)); } catch {} };
 const settingsDoc = () => ({ mode: state.mode, limits: state.limits, strength: state.strength });
 
-// plan: { mode, from, start, end }. Straight line from `from` a day on the start date to 0 on the quit date, then 0.
-const planned = (k, m) => {
-  const p = state.plan;
-  if (!p || p.mode !== m || k < p.start) return null;
-  const n = daysBetween(p.start, p.end);
-  return Math.max(0, Math.ceil(p.from * (n - daysBetween(p.start, k)) / n));
+// plan: { mode, from, start, end }. Straight line from `from` on the start date to 0 on the quit date, then 0.
+// Pouches and cigarettes: whole items a day. Vaping: refills a week in halves, fixed from each Monday.
+const planValue = (p, k) => {
+  const n = daysBetween(p.start, p.end), wk = p.mode === "vaping";
+  if (wk && monOf(k) > p.start) k = monOf(k);
+  const x = p.from * (n - daysBetween(p.start, k)) / n;
+  return Math.max(0, wk ? Math.ceil(x * 2) / 2 : Math.ceil(x));
 };
-const limitsOn = k => { const l = { ...state.limits }; for (const m in MODES) { const t = planned(k, m); if (t != null) l[m] = t; } return l; };
+const planned = (k, m) => { const p = state.plan; return !p || p.mode !== m || k < p.start ? null : planValue(p, k); };
+const limitsOn = k => { const l = { ...state.limits }; for (const m of PLANS) { const t = planned(k, m); if (t != null) l[m] = t; } return l; };
 const refreshToday = () => { if (state.days[today]) state.days[today] = { ...state.days[today], limits: limitsOn(today) }; };
 
 const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: limitsOn(sel) };
@@ -565,9 +648,11 @@ function render() {
   $("dayPick").value = sel; $("dayPick").max = today;
   $("nextDay").disabled = sel >= today;
   renderMoney();
-  for (const el of document.querySelectorAll(".nic")) el.hidden = m === "alcohol";
+  for (const el of document.querySelectorAll(".nic")) el.hidden = !MODES[m];
   $("alc").hidden = $("alc2").hidden = m !== "alcohol";
+  $("vape").hidden = $("vape2").hidden = m !== "vaping";
   if (m === "alcohol") return renderAlcohol();
+  if (m === "vaping") return renderVaping();
   const M = MODES[m], d = day(), n = d[m], lim = d.limits[m], over = n > lim, when = sel === today ? " today" : "";
   $("count").textContent = n;
   $("ofLine").innerHTML = `of <b>${lim}</b> ${planned(sel, m) != null ? "on your plan" : "daily limit"}`;
@@ -616,7 +701,7 @@ function renderWeek() {
 
 function renderCal() {
   const m = state.mode, p = state.plan, [y, mo] = cal.split("-").map(Number), first = new Date(y, mo - 1, 1), n = new Date(y, mo, 0).getDate();
-  $("planInfo").textContent = p ? `0 ${MODES[p.mode].many} by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "no plan yet";
+  $("planInfo").textContent = p ? `0 ${nameOf(p.mode).many}${p.mode === "vaping" ? " a week" : ""} by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "no plan yet";
   $("planBtn").textContent = p ? "New plan" : "Make a plan";
   $("planDel").hidden = !p;
   $("calTitle").textContent = first.toLocaleDateString("en-GB", { month: "long", ...(y !== new Date().getFullYear() && { year: "numeric" }) });
@@ -650,19 +735,21 @@ function chart(svg, rows, dates, valueOf, limitOf, color) {
 }
 
 // A day holding only drinks is not a nicotine day.
-const nicRow = r => r && (r.pouches || r.cigarettes || !(r.drinks?.length || r.dry)) ? r : undefined;
+const nicRow = r => r && (r.pouches || r.cigarettes || !(r.drinks?.length || r.dry || r.vapes?.length)) ? r : undefined;
 const last30 = () => { const dates = []; for (let i = 29; i >= 0; i--) dates.push(shift(today, -i)); return dates; };
-const weekUnits = k => { const x = new Date(k + "T12:00"), mon = shift(k, -((x.getDay() + 6) % 7)); let t = 0; for (let i = 0; i < 7; i++) t += units(state.days[shift(mon, i)]); return t; };
+const weekSum = (k, f) => { const mon = monOf(k); let t = 0; for (let i = 0; i < 7; i++) t += f(state.days[shift(mon, i)]); return t; };
+const weekUnits = k => weekSum(k, units);
 
 const beforeOf = m => state.money[m].before ?? (state.plan?.mode === m ? state.plan.from : undefined);
 const sinceOf = () => state.money.since || state.plan?.start || today;
 function saved() {
   const out = {};
   for (const m of state.tabs) {
-    const c = state.money[m], before = beforeOf(m), alc = m === "alcohol", price = alc ? c.price : c.price / (c.per || 20);
+    // Alcohol and vaping: price per unit or refill, "before" per week. Nicotine: price per can or pack, "before" per day.
+    const c = state.money[m], before = beforeOf(m), wk = !MODES[m], price = wk ? c.price : c.price / (c.per || 20);
     if (!price || !before) continue;
     let t = 0;
-    for (let k = sinceOf(); k <= today; k = shift(k, 1)) { const r = state.days[k]; t += ((alc ? before / 7 : before) - (alc ? units(r) : r ? r[m] : 0)) * price; }
+    for (let k = sinceOf(); k <= today; k = shift(k, 1)) { const r = state.days[k]; t += ((wk ? before / 7 : before) - (m === "alcohol" ? units(r) : m === "vaping" ? tanks(r) : r ? r[m] : 0)) * price; }
     out[m] = t;
   }
   return out;
@@ -710,6 +797,45 @@ function renderAlcohol() {
   $("wkNow").textContent = r1(weekUnits(today));
   $("wkPrev").textContent = r1(weekUnits(shift(today, -7)));
   $("dryN").textContent = rows.filter(r => r && r.dry).length;
+}
+
+function renderVaping() {
+  const d = day(), mon = monOf(sel), wk = weekSum(sel, tanks), lim = d.limits.vaping ?? limitsOn(sel).vaping, pl = planned(today, "vaping");
+  const now = mon === monOf(today), fmtD = k => new Date(k + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  $("vWhen").textContent = now ? "This week" : `Week of ${fmtD(mon)}`;
+  $("vTotal").innerHTML = `${frac(wk)}<small> of ${frac(lim)} ${wk === 1 && lim === 1 ? "refill" : "refills"}</small>`;
+  $("vMeter").classList.toggle("over", wk > 0 && wk >= lim);
+  $("vMeter").firstElementChild.style.width = Math.min(100, lim ? wk / lim * 100 : 100) + "%";
+  const st = $("vStatus"), left = lim - wk;
+  st.classList.toggle("over", wk > 0 && wk >= lim);
+  st.textContent = wk > lim ? `${frac(wk - lim)} over your weekly limit` : wk > 0 && wk === lim ? "Weekly limit reached" : `${frac(left)} ${left === 1 ? "refill" : "refills"} left ${now ? "this week" : "that week"}`;
+  const v = d.vapes || [];
+  $("vLogTitle").textContent = sel === today ? "Today's refills" : `Refills on ${fmtD(sel)}`;
+  $("vLog").innerHTML = v.map((x, i) => `<li><span>${x === 6 ? "Full tank" : frac(x / 6) + " of a tank"}</span><button data-i="${i}" aria-label="Remove">×</button></li>`).join("");
+  $("vEmpty").hidden = v.length > 0;
+  $("vLimOut").textContent = frac(limitsOn(today).vaping);
+  $("vLimHint").textContent = pl != null ? "set by your plan this week" : "refills Mon–Sun";
+  $("vLimUp").disabled = $("vLimDown").disabled = pl != null;
+  // Plan: last week, this week and the next three, against the target of each week.
+  const p = state.plan?.mode === "vaping" ? state.plan : null;
+  $("vPlanInfo").textContent = p ? `0 by ${new Date(p.end + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : state.plan ? `the plan is for ${state.plan.mode}` : "no plan yet";
+  $("vPlanBtn").textContent = p ? "New plan" : "Make a plan";
+  $("vPlanDel").hidden = !p;
+  $("vPlan").hidden = !p;
+  if (p) $("vPlan").innerHTML = [-1, 0, 1, 2, 3].map(i => {
+    const m0 = shift(monOf(today), 7 * i);
+    if (shift(m0, 6) < p.start) return ""; // week ended before the plan began
+    const t = planned(m0 < p.start ? p.start : m0, "vaping"), used = weekSum(m0, tanks);
+    const cls = i > 0 ? "fut" : used > t ? "over" : "ok";
+    return `<div class="${cls}${i === 0 ? " now" : ""}"><span>${i === 0 ? "This week" : i === -1 ? "Last week" : `Week of ${fmtD(m0)}`}</span><b>${i > 0 ? frac(t) : `${frac(used)} / ${frac(t)}`}</b></div>`;
+  }).join("");
+  // Chart: refills per week for the last 8 weeks, against that week's limit.
+  const mons = [...Array(8)].map((_, i) => shift(monOf(today), -7 * (7 - i)));
+  const rows = mons.map(m0 => { const r = state.days[m0]; return { v: weekSum(m0, tanks), lim: (r?.limits?.vaping) ?? limitsOn(m0).vaping }; });
+  chart($("vChart"), rows, mons, o => o.v, o => o.lim, (x, l) => x > l ? "var(--over)" : "var(--accent)");
+  $("vNow").textContent = frac(rows[7].v);
+  $("vPrev").textContent = frac(rows[6].v);
+  $("vAvg").textContent = r1(rows.slice(4).reduce((t, o) => t + o.v, 0) / 4);
 }
 
 function renderCharts() {
@@ -777,6 +903,10 @@ $("drinkBtns").onclick = e => { const b = e.target.closest("button"); if (b) { c
 $("custom").onsubmit = e => { e.preventDefault(); const ml = +$("cMl").value * VOL[state.measure][0], abv = +$("cAbv").value; addDrink(`${vol(ml)} at ${abv}%`, ml, abv); e.target.reset(); };
 $("dlog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.drinks.splice(+b.dataset.i, 1)); };
 $("dryDay").onclick = () => editDay(d => { d.dry = !d.dry; });
+$("vAdds").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => { d.vapes = [...(d.vapes || []), +b.dataset.s]; }); };
+$("vLog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.vapes.splice(+b.dataset.i, 1)); };
+$("vLimUp").onclick = () => setLimit(0.5);
+$("vLimDown").onclick = () => setLimit(-0.5);
 $("aLimUp").onclick = () => setLimit(1);
 $("aLimDown").onclick = () => setLimit(-1);
 const setWeekly = delta => { state.weekly = Math.max(0, Math.min(100, state.weekly + delta)); saveLocal(); render(); };
@@ -791,21 +921,34 @@ render();
 // Setup: current use + quit date → a plan. Shown once on first launch, then from the Plan panel.
 let smode;
 const markSmode = () => document.querySelectorAll("[data-smode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.smode === smode));
-document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => { smode = b.dataset.smode; markSmode(); drawTaper(); });
+// A vaping plan counts refills a week in halves; the others count a day in whole items.
+const setSmode = (m, from) => {
+  smode = m; markSmode();
+  const wk = m === "vaping";
+  $("sFromLbl").textContent = wk ? "Refills a week now" : "A day now";
+  $("sFrom").step = wk ? 0.5 : 1; $("sFrom").min = wk ? 0.5 : 1;
+  if (from != null) $("sFrom").value = from;
+  const p = state.plan;
+  $("sWarn").hidden = !(p && p.mode !== m);
+  if (p) $("sWarn").textContent = `This replaces your ${p.mode} plan: Less follows one plan at a time.`;
+  drawTaper();
+};
+document.querySelectorAll("[data-smode]").forEach(b => b.onclick = () => setSmode(b.dataset.smode, state.plan?.mode === b.dataset.smode ? state.plan.from : state.limits[b.dataset.smode]));
 let what = [];
 const markWhat = () => { document.querySelectorAll("[data-what]").forEach(b => b.setAttribute("aria-pressed", what.includes(b.dataset.what))); $("whatNext").disabled = !what.length; };
 document.querySelectorAll("[data-what]").forEach(b => b.onclick = () => { const k = b.dataset.what; what = what.includes(k) ? what.filter(x => x !== k) : [...what, k]; markWhat(); });
 $("whatNext").onclick = () => {
   state.tabs = TABS.filter(m => what.includes(m)); state.mode = state.tabs[0];
   saveLocal(); render(); fillPrefs();
-  if (state.tabs.some(m => MODES[m])) openSetup("plan"); else $("setup").close("done");
+  if (state.tabs.some(m => PLANS.includes(m))) openSetup("plan"); else $("setup").close("done");
 };
 function openSetup(step) {
   $("stepWhat").hidden = step !== "what"; $("stepPlan").hidden = step === "what";
   what = []; markWhat();
   document.querySelectorAll("[data-smode]").forEach(b => b.hidden = !state.tabs.includes(b.dataset.smode));
-  smode = state.plan?.mode || (MODES[state.mode] ? state.mode : state.tabs.find(m => MODES[m]) || "pouches"); markSmode();
-  $("sFrom").value = state.plan?.from || state.limits[smode];
+  // From a tracker's own Plan panel, plan that tracker; otherwise keep the plan there is.
+  const m = PLANS.includes(state.mode) && step === "plan" && $("setup").open === false ? state.mode : state.plan?.mode || state.tabs.find(x => PLANS.includes(x)) || "pouches";
+  setSmode(m, state.plan?.mode === m ? state.plan.from : state.limits[m]);
   $("sEnd").min = shift(today, 1);
   $("sEnd").value = state.plan?.end > today ? state.plan.end : shift(today, 56);
   $("planStep").textContent = $("setup").open ? "Step 2 of 2" : "Quit plan";
@@ -815,34 +958,36 @@ function openSetup(step) {
 }
 // Preview of the plan: the same staircase planned() will follow, from today to the quit date.
 function drawTaper() {
-  const f = Math.round(+$("sFrom").value), end = $("sEnd").value, n = daysBetween(today, end), M = MODES[smode] || MODES.pouches;
+  const wk = smode === "vaping", f = wk ? Math.round(+$("sFrom").value * 2) / 2 : Math.round(+$("sFrom").value), end = $("sEnd").value, n = daysBetween(today, end), M = nameOf(smode);
   if (!(f > 0 && n > 0)) { $("taper").innerHTML = ""; $("taperNote").innerHTML = ""; return; }
-  const W = 340, T = 24, B = 160, x = i => i / n * (W - 8), y = v => B - (B - T) * v / f;
+  const W = 340, T = 24, B = 160, x = i => i / n * (W - 8), y = v => B - (B - T) * v / f, tp = { mode: smode, from: f, start: today, end };
   let d = `M0 ${y(f)}`, prev = f;
-  for (let i = 1; i <= n; i++) { const v = Math.max(0, Math.ceil(f * (n - i) / n)); if (v !== prev) { d += ` H${x(i)} V${y(v)}`; prev = v; } }
+  for (let i = 1; i <= n; i++) { const v = planValue(tp, shift(today, i)); if (v !== prev) { d += ` H${x(i)} V${y(v)}`; prev = v; } }
   d += ` H${W}`;
   const fmt = k => new Date(k + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   $("taper").innerHTML = `<path d="M0 ${B}H${W}" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
     <path d="${d} V${B} H0Z" fill="var(--accent)" fill-opacity=".08"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>
     <circle cx="4" cy="${y(f)}" r="5.5" fill="var(--bg)" stroke="var(--accent)" stroke-width="2.4"/><circle cx="${W - 6}" cy="${B}" r="6.5" fill="var(--over)"/>
-    <text x="16" y="${y(f) - 6}">${f}</text><text x="${W - 4}" y="${B - 16}" text-anchor="end" font-style="italic" fill="var(--over)">0</text>
+    <text x="16" y="${y(f) - 6}">${wk ? frac(f) : f}</text><text x="${W - 4}" y="${B - 16}" text-anchor="end" font-style="italic" fill="var(--over)">0</text>
     <text class="x" x="0" y="${B + 24}">${fmt(today)}</text><text class="x" x="${W}" y="${B + 24}" text-anchor="end">${fmt(end)}</text>`;
   const every = n / f;
+  if (wk) { const weeks = Math.max(1, Math.round(n / 7 / (f * 2))); $("taperNote").innerHTML = `<b>−½</b><span>Half a refill fewer a week,<br>about every ${weeks === 1 ? "week" : `${weeks} weeks`}.</span>`; return; }
   $("taperNote").innerHTML = every >= 1.5 ? `<b>−1</b><span>One fewer ${M.one} a day,<br>about every ${Math.round(every)} days.</span>`
     : `<b>−${r1(f / n)}</b><span>${M.many[0].toUpperCase() + M.many.slice(1)} a day, fewer<br>every day.</span>`;
 }
 $("sFrom").oninput = $("sEnd").oninput = drawTaper;
-$("sUp").onclick = () => { $("sFrom").value = Math.min(100, (+$("sFrom").value || 0) + 1); drawTaper(); };
-$("sDown").onclick = () => { $("sFrom").value = Math.max(1, (+$("sFrom").value || 2) - 1); drawTaper(); };
+$("sUp").onclick = () => { const s = +$("sFrom").step; $("sFrom").value = Math.min(100, (+$("sFrom").value || 0) + s); drawTaper(); };
+$("sDown").onclick = () => { const s = +$("sFrom").step; $("sFrom").value = Math.max(s, (+$("sFrom").value || 2 * s) - s); drawTaper(); };
 $("setup").onclose = () => {
   if ($("setup").returnValue === "plan") {
-    state.plan = { mode: smode, from: Math.round(+$("sFrom").value), start: today, end: $("sEnd").value };
+    const v = +$("sFrom").value, from = smode === "vaping" ? Math.round(v * 2) / 2 : Math.round(v);
+    if (from > 0 && $("sEnd").value > today) state.plan = { mode: smode, from, start: today, end: $("sEnd").value };
     state.mode = smode; refreshToday(); goTo(today); fillPrefs();
   }
   state.setup = true; saveLocal(); render();
 };
-$("planBtn").onclick = () => openSetup("plan");
-$("planDel").onclick = () => { if (confirm("Remove the plan? Your logged days stay.")) { delete state.plan; refreshToday(); saveLocal(); render(); fillPrefs(); } };
+$("planBtn").onclick = $("vPlanBtn").onclick = () => openSetup("plan");
+$("planDel").onclick = $("vPlanDel").onclick = () => { if (confirm("Remove the plan? Your logged days stay.")) { delete state.plan; refreshToday(); saveLocal(); render(); fillPrefs(); } };
 if (!state.setup) openSetup("what");
 
 $("pCur").innerHTML = CURRENCIES.map(c => `<option>${c}</option>`).join("");
@@ -886,7 +1031,8 @@ $("import").onchange = async e => {
     const days = {};
     for (const k in s.days) if (/^\d{4}-\d{2}-\d{2}$/.test(k)) days[k] = norm(s.days[k]);
     const p = s.plan, D = /^\d{4}-\d{2}-\d{2}$/;
-    const plan = p && MODES[p.mode] && D.test(p.start) && D.test(p.end) && p.end > p.start && +p.from > 0 ? { mode: p.mode, from: Math.round(+p.from), start: p.start, end: p.end } : state.plan;
+    const pf = p && (p.mode === "vaping" ? Math.round(+p.from * 2) / 2 : Math.round(+p.from));
+    const plan = p && PLANS.includes(p.mode) && D.test(p.start) && D.test(p.end) && p.end > p.start && pf > 0 && pf <= 100 ? { mode: p.mode, from: pf, start: p.start, end: p.end } : state.plan;
     state = { ...state, plan, tabs: cleanTabs(s.tabs)?.length ? cleanTabs(s.tabs) : state.tabs, measure: VOL[s.measure] ? s.measure : state.measure, money: s.money ? cleanMoney(s.money) : state.money, mode: TABS.includes(s.mode) ? s.mode : state.mode, weekly: s.weekly >= 0 && s.weekly <= 100 ? +s.weekly : state.weekly, limits: { ...state.limits, ...s.limits }, strength: { ...state.strength, ...s.strength }, days: { ...state.days, ...days } };
     saveLocal(); render(); fillPrefs();
     msg(`Imported ${Object.keys(days).length} days.`);
@@ -899,18 +1045,18 @@ if (GOATCOUNTER) {
   document.head.append(g);
 }
 if (DONATE_URL) { $("donate").href = $("askDonate").href = DONATE_URL; $("support").hidden = false; }
-// Donation popup: only after a week of logged days, then at most once a month (every 3 months after Donate), never after "Don't ask again".
+// Donation popup: only after a week of logged days, then every 2 weeks; a month after "Ask me next month", 3 months after Donate.
 // Kept out of `state` so it doesn't travel in backups.
 const ASK = "less-donate";
 const askState = () => { try { return JSON.parse(localStorage.getItem(ASK)) || {}; } catch { return {}; } };
 $("askDonate").onclick = () => $("askDlg").close("donate");
 $("askDlg").onclose = () => {
   const r = $("askDlg").returnValue;
-  try { localStorage.setItem(ASK, JSON.stringify(r === "never" ? { never: true } : { next: shift(today, r === "donate" ? 90 : 30) })); } catch {}
+  try { localStorage.setItem(ASK, JSON.stringify({ next: shift(today, r === "donate" ? 90 : r === "month" ? 30 : 14) })); } catch {}
 };
 setTimeout(() => {
   const a = askState();
-  if (!DONATE_URL || !state.setup || a.never || (a.next && a.next > today) || Object.keys(state.days).length < 7) return;
+  if (!DONATE_URL || !state.setup || (a.next && a.next > today) || Object.keys(state.days).length < 7) return;
   if (document.querySelector("dialog[open]")) return;
   $("askDlg").returnValue = ""; $("askDlg").showModal();
 }, 2500);
