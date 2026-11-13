@@ -41,7 +41,7 @@ It's plain HTML, CSS and JavaScript with no build step. Serve the folder with an
 
 ## Setting up the donation link
 
-The *Support Less* section at the bottom of the app shows `donate-qr.png` (a PayPal QR code) and a button to the same link, `DONATE_URL` near the top of the script in `index.html`. To use your own, replace the image and the URL; an empty `DONATE_URL` hides the section.
+The *Support Less* section at the bottom of the app shows `donate-qr.png` (a PayPal QR code) and a button to the same link, `DONATE_URL` near the top of the script in `index.html`. To use your own, replace the image and the URL; an empty `DONATE_URL` hides the section. Once someone has logged 7 days, a popup asks for a donation at most once a month (every 3 months after they tap Donate, never after "Don't ask again"); that choice is stored in `less-donate`, outside the backup.
 
 ## Counting visitors
 
