@@ -1141,7 +1141,17 @@ $("privClose").onclick = () => $("privDlg").close();
 
 // Backup: export / import as JSON.
 const msg = t => { $("dataMsg").textContent = t; };
-$("export").onclick = () => {
+$("export").onclick = async () => {
+  if (NATIVE) {
+    // The app's WebView ignores <a download>: write the file, then let the share sheet save or send it.
+    const { Filesystem, Share } = Capacitor.Plugins, path = `less-backup-${today}.json`;
+    try {
+      const { uri } = await Filesystem.writeFile({ path, data: JSON.stringify(state, null, 2), directory: "CACHE", encoding: "utf8" });
+      await Share.share({ title: "Less backup", files: [uri] });
+      msg(`Exported ${Object.keys(state.days).length} days.`);
+    } catch (e) { if (!/cancel/i.test(e?.message)) msg("Couldn't export the backup."); }
+    return;
+  }
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1150,6 +1160,8 @@ $("export").onclick = () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   msg(`Exported ${Object.keys(state.days).length} days.`);
 };
+// Some Android file pickers label .json as a generic file and grey it out; the import checks the content anyway.
+if (NATIVE) $("import").removeAttribute("accept");
 $("import").onchange = async e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;
