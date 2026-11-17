@@ -57,7 +57,7 @@ The same `index.html` runs inside a native shell made with [Capacitor](https://c
 - Android's back button closes the open sheet before leaving the app. There's no service worker: the files are inside the app.
 - The app's data is separate from the website's: use Export and Import backup to move it. Android's cloud backup is off (`allowBackup="false"`), so the data stays on the phone.
 
-**Builds:** the *Android* workflow in GitHub Actions runs on every pull request and push to `main`. It always uploads `less-debug-apk`, which you can install on a phone to try (allow installing from unknown sources). When the upload key secrets exist it also uploads `less-release-aab`, the signed bundle for the Play Console. Each run's number is the `versionCode`.
+**Builds:** the *Android* workflow in GitHub Actions runs on every pull request and push to `main`. It always uploads `less-debug-apk`, which you can install on a phone to try (allow installing from unknown sources). Debug APKs are signed with the public `android/app/debug.keystore`, so a newer one installs over the older one and keeps your data; it is not the Play key. When the upload key secrets exist it also uploads `less-release-aab`, the signed bundle for the Play Console. Each run's number is the `versionCode`.
 
 **Upload key** (once, on your computer; keep the file and passwords safe, you need them for every update):
 

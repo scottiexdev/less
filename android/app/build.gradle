@@ -18,6 +18,13 @@ android {
         }
     }
     signingConfigs {
+        // Fixed, public debug key: CI runners make a new one each run, so a newer debug APK wouldn't install over the old one.
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
         // The Play upload key, from GitHub secrets (see README). Without it the release bundle is built unsigned.
         release {
             if (System.getenv("ANDROID_KEYSTORE")) {
