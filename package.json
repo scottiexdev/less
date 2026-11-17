@@ -1,0 +1,20 @@
+{
+  "name": "less",
+  "version": "1.0.0",
+  "description": "Less, Android/iOS shell (Capacitor) around the web app",
+  "scripts": {
+    "web": "rm -rf www && mkdir www && cp -r index.html manifest.webmanifest *.png icon.svg fonts www/",
+    "sync": "npm run web && cap sync"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/local-notifications": "^8.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  },
+  "private": true
+}
