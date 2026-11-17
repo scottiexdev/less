@@ -118,6 +118,12 @@ h2 span { font-size: .88rem; font-weight: 600; letter-spacing: 0; text-transform
 .install b { color: var(--accent); }
 .support { display: grid; grid-template-columns: 128px 1fr; gap: 16px; align-items: center; background: var(--surface); border-radius: 22px; padding: 14px; }
 .support img { width: 128px; height: 128px; border-radius: 14px; background: #fff; display: block; }
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tier { display: grid; justify-items: center; gap: 4px; padding: 14px 6px; border: 0; border-radius: 22px; background: var(--surface); color: inherit; font: inherit; }
+.tier b { font-size: 2rem; line-height: 1; filter: grayscale(1); opacity: .45; }
+.tier.got, .tier.got b { filter: none; opacity: 1; color: inherit; }
+.tier small { color: var(--muted); }
+.tips > p { margin: 0 0 12px; font-size: .92rem; line-height: 1.45; color: var(--muted); }
 .support p { margin: 0 0 12px; font-size: .92rem; line-height: 1.45; color: var(--muted); }
 .donate { white-space: nowrap; display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 23px; background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
 .foot { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
@@ -467,7 +473,12 @@ form.setup { padding: 0; }
   </section>
   <section class="panel" id="support" hidden>
     <h2>Support Less</h2>
-    <div class="support">
+    <div class="app tips" hidden>
+      <p>Less is free, with no ads and no tracking. If it helps you cut down, leave a tip: each one unlocks a badge, just to say thanks.</p>
+      <div class="tiers" id="tiers"></div>
+      <p class="note" id="tipMsg" role="status"></p>
+    </div>
+    <div class="support web">
       <img src="donate-qr.png" alt="PayPal QR code: scan it with another phone to donate" width="128" height="128" loading="lazy">
       <div><p>Less is free, with no ads and no tracking. If it helps you cut down, you can buy me a coffee.</p><a class="donate" id="donate" href="#" target="_blank" rel="noopener">Donate</a></div>
     </div>
@@ -572,7 +583,9 @@ form.setup { padding: 0; }
     <h3>Backups</h3>
     <p>Export backup saves a file on your device. Where you keep or send it is up to you.</p>
     <div class="app" hidden><h3>Reminder</h3>
-    <p>If you turn on the daily reminder, your phone schedules it by itself. Nothing is sent anywhere.</p></div>
+    <p>If you turn on the daily reminder, your phone schedules it by itself. Nothing is sent anywhere.</p>
+    <h3>Tips</h3>
+    <p>Only if you leave a tip, Google Play handles the payment under the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google privacy policy</a>. ScottieLabs receives the order details Google shares with a developer and keeps them only as long as accounting law requires. Which badges you own is read back from Google Play on your phone.</p></div>
     <div class="web"><h3>Hosting</h3>
     <p>The app is served by GitHub Pages (GitHub, Inc.). Like any web server, it records your IP address when you load the page, for security. See the <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub privacy statement</a>. Once installed, the app works offline.</p>
     <h3>Donations</h3>
@@ -581,7 +594,7 @@ form.setup { padding: 0; }
     <h3>Deleting your data</h3>
     <p>Clear this site's data in your browser settings, or uninstall the app. That erases everything; nothing is kept anywhere else.</p>
     <h3>Your rights</h3>
-    <p>Under the GDPR you can ask ScottieLabs to access, correct or delete any data about you it holds (normally none, except donation records), and you can complain to your data protection authority; in Italy, the Garante per la protezione dei dati personali.</p>
+    <p>Under the GDPR you can ask ScottieLabs to access, correct or delete any data about you it holds (normally none, except donation and tip records), and you can complain to your data protection authority; in Italy, the Garante per la protezione dei dati personali.</p>
     <p class="note" style="text-align:left;margin-top:16px">Last updated 17 November 2026.</p>
   </div>
 </dialog>
@@ -1118,6 +1131,34 @@ if (GOATCOUNTER) {
   const g = document.createElement("script");
   g.async = true; g.src = "https://gc.zgo.at/count.js"; g.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
   document.head.append(g);
+}
+// Tip jar in the store app: one-time Play products, so each badge is owned for good and comes back after a reinstall.
+const TIPS = [["tip_seed", "🌱", "Seed"], ["tip_sprout", "🌿", "Sprout"], ["tip_tree", "🌳", "Tree"]];
+if (NATIVE && Capacitor.Plugins.NativePurchases) {
+  const Pay = Capacitor.Plugins.NativePurchases, tipMsg = t => { $("tipMsg").textContent = t; };
+  const btns = Object.fromEntries(TIPS.map(([id, icon, name]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tier"; b.disabled = true;
+    b.innerHTML = `<b aria-hidden="true">${icon}</b><span>${name}</span><small>…</small>`;
+    b.onclick = async () => {
+      try {
+        const t = await Pay.purchaseProduct({ productIdentifier: id, productType: "inapp" });
+        if (t.purchaseState === "1") { own(id); tipMsg(`Thank you! ${icon} ${name} is yours.`); } else tipMsg("Payment pending: the badge unlocks once it clears.");
+      } catch { tipMsg("The tip didn't go through. Nothing was charged."); }
+    };
+    $("tiers").append(b); return [id, b];
+  }));
+  const own = id => { const b = btns[id]; b.classList.add("got"); b.disabled = true; b.querySelector("small").textContent = "Thank you"; };
+  $("support").hidden = false;
+  (async () => {
+    try {
+      const { products } = await Pay.getProducts({ productIdentifiers: TIPS.map(t => t[0]), productType: "inapp" });
+      for (const p of products) if (btns[p.identifier]) { btns[p.identifier].disabled = false; btns[p.identifier].querySelector("small").textContent = p.priceString; }
+      // "1" = PURCHASED; pending payments (e.g. cash at a shop) unlock once they clear.
+      const { purchases } = await Pay.getPurchases({ productType: "inapp" });
+      for (const t of purchases) if (btns[t.productIdentifier] && t.purchaseState === "1") own(t.productIdentifier);
+    } catch { tipMsg("Tips need Google Play. Try again later."); }
+  })();
 }
 if (DONATE_URL) { $("donate").href = $("askDonate").href = DONATE_URL; $("support").hidden = false; }
 // Donation popup: only after a week of logged days, then every 2 weeks; a month after "Ask me next month", 3 months after Donate.
