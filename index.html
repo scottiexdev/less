@@ -521,6 +521,11 @@ form.setup { padding: 0; }
         <label><input type="radio" name="measure" value="l">Litres</label>
         <label><input type="radio" name="measure" value="floz">US fl oz</label>
       </div>
+      <fieldset class="app" hidden><legend>Reminder</legend>
+        <label class="sw"><span>Remind me to log, every day</span><input type="checkbox" id="rOn"></label>
+        <label>At<input type="time" id="rTime" value="21:00"></label>
+        <p class="hint" id="rHint" hidden>Couldn't turn the reminder on. Check that notifications for Less are allowed in your phone's settings.</p>
+      </fieldset>
       <fieldset><legend>Less of</legend>
         <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-pouch"/></svg>Pouches</span><input type="checkbox" id="t-pouches"></label>
         <label class="sw"><span><svg class="ico" aria-hidden="true"><use href="#i-cigarette"/></svg>Cigarettes</span><input type="checkbox" id="t-cigarettes"></label>
@@ -566,15 +571,18 @@ form.setup { padding: 0; }
     <p>Everything you enter (pouches, cigarettes, drinks, refills, plans, prices, settings) is saved only in this browser's storage on your device. It is never sent to ScottieLabs or anyone else: we can't see it, so we can't share, sell or lose it. No account, no cookies, no analytics, no ads. The fonts and images come from this site.</p>
     <h3>Backups</h3>
     <p>Export backup saves a file on your device. Where you keep or send it is up to you.</p>
-    <h3>Hosting</h3>
+    <div class="app" hidden><h3>Reminder</h3>
+    <p>If you turn on the daily reminder, your phone schedules it by itself. Nothing is sent anywhere.</p></div>
+    <div class="web"><h3>Hosting</h3>
     <p>The app is served by GitHub Pages (GitHub, Inc.). Like any web server, it records your IP address when you load the page, for security. See the <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub privacy statement</a>. Once installed, the app works offline.</p>
     <h3>Donations</h3>
     <p>Only if you tap Donate or scan the QR code you go to PayPal, which handles the payment under its own <a href="https://www.paypal.com/myaccount/privacy/privacyhub" target="_blank" rel="noopener">privacy notice</a>. ScottieLabs receives the payment details PayPal shares with a recipient (such as name, email and amount) and keeps them only as long as accounting law requires.</p>
+    </div>
     <h3>Deleting your data</h3>
     <p>Clear this site's data in your browser settings, or uninstall the app. That erases everything; nothing is kept anywhere else.</p>
     <h3>Your rights</h3>
     <p>Under the GDPR you can ask ScottieLabs to access, correct or delete any data about you it holds (normally none, except donation records), and you can complain to your data protection authority; in Italy, the Garante per la protezione dei dati personali.</p>
-    <p class="note" style="text-align:left;margin-top:16px">Last updated 13 November 2026.</p>
+    <p class="note" style="text-align:left;margin-top:16px">Last updated 17 November 2026.</p>
   </div>
 </dialog>
 
@@ -591,8 +599,11 @@ form.setup { padding: 0; }
 // Visit counter: sign up at goatcounter.com (free, no cookies) and put your site code here, e.g. "scottiex-less". Empty = no counting.
 // If you turn it on, add it to the Privacy notice (#privDlg) and the README: it sends page views and IP-derived data to GoatCounter.
 const GOATCOUNTER = "";
+// True inside the Android/iOS app (Capacitor), false on the website.
+const NATIVE = window.Capacitor?.isNativePlatform?.() === true;
 // Your donation page (here the PayPal link inside donate-qr.png). Leave empty to hide the Support section.
-const DONATE_URL = "https://www.paypal.com/qrcodes/managed/c189142f-aba7-441a-ac65-a644cdb7b9a0?utm_source=consweb_more";
+// Off in the store app: Play and the App Store don't allow linking out to pay the developer.
+const DONATE_URL = NATIVE ? "" : "https://www.paypal.com/qrcodes/managed/c189142f-aba7-441a-ac65-a644cdb7b9a0?utm_source=consweb_more";
 const LS = "nicotine-v2";
 const MODES = {
   pouches: { one: "pouch", many: "pouches", strStep: 1, strHint: "mg per pouch, from the can" },
@@ -1049,6 +1060,27 @@ $("prefs").oninput = () => {
   saveLocal(); render();
 };
 fillPrefs();
+for (const el of document.querySelectorAll(".web, .app")) el.hidden = el.classList.contains("app") !== NATIVE;
+if (NATIVE) {
+  const { LocalNotifications: Notes, App } = Capacitor.Plugins, REMIND = "less-remind";
+  // Android back closes the open sheet first, like Esc, instead of leaving the app.
+  App.addListener("backButton", () => { const d = document.querySelector("dialog[open]"); if (!d) App.exitApp(); else if (d.requestClose) d.requestClose(); else d.close(); });
+  // Daily reminder: a local notification the phone schedules itself, so no server and nothing leaves the device.
+  let r = {}; try { r = JSON.parse(localStorage.getItem(REMIND)) || {}; } catch {}
+  $("rOn").checked = r.on === true; if (/^\d\d:\d\d$/.test(r.time)) $("rTime").value = r.time;
+  $("rOn").onchange = $("rTime").onchange = async () => {
+    const time = $("rTime").value || "21:00", [hour, minute] = time.split(":").map(Number);
+    $("rHint").hidden = true;
+    try {
+      await Notes.cancel({ notifications: [{ id: 1 }] });
+      if ($("rOn").checked) {
+        if ((await Notes.requestPermissions()).display !== "granted") throw 0;
+        await Notes.schedule({ notifications: [{ id: 1, title: "Less", body: "How did today go? Take a second to log it.", smallIcon: "ic_stat_less", iconColor: "#2f4a3a", schedule: { on: { hour, minute }, allowWhileIdle: true }, isExactNotification: false }] });
+      }
+    } catch { $("rOn").checked = false; $("rHint").hidden = false; }
+    try { localStorage.setItem(REMIND, JSON.stringify({ on: $("rOn").checked, time })); } catch {}
+  };
+}
 $("prefsBtn").onclick = () => { fillPrefs(); $("prefsDlg").showModal(); };
 $("prefsClose").onclick = () => $("prefsDlg").close();
 $("privBtn").onclick = $("privLink").onclick = e => { e.preventDefault(); $("privDlg").showModal(); };
@@ -1108,7 +1140,7 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfor
 if (isIOS && !navigator.standalone) $("iosHint").hidden = false;
 try { navigator.storage?.persist?.(); } catch {}
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if (!NATIVE && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
 </html>

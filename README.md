@@ -29,6 +29,7 @@ Less is published by **ScottieLabs**, the data controller under the GDPR. Contac
 - **What you log never leaves the device.** There is no server and no account. Everything is stored in your browser's `localStorage`. ScottieLabs never receives it.
 - **No third parties on load.** No cookies, no analytics, no ads. Fonts (SIL Open Font License, see `fonts/OFL.txt`) and images are served from this site.
 - **Hosting:** GitHub Pages logs visitors' IP addresses, as any web server does ([GitHub privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement)).
+- **Android app:** the daily reminder is scheduled on the phone; nothing is sent. The app loads its files from the phone, not from GitHub.
 - **Donations** go through PayPal only when someone taps Donate or scans the QR code.
 - **Backups:** use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
 
@@ -45,6 +46,28 @@ If this helps you cut down, you can buy me a coffee: [Donate with PayPal](https:
 ## Run it yourself
 
 It's plain HTML, CSS and JavaScript with no build step. Serve the folder with any static server, for example `python3 -m http.server`, or fork the repo and turn on GitHub Pages (Settings → Pages → Deploy from branch → `main` / root).
+
+## Android app
+
+The same `index.html` runs inside a native shell made with [Capacitor](https://capacitorjs.com) (`android/`, `capacitor.config.json`, app id `com.scottielabs.less`). In the app:
+
+- **Daily reminder** (Settings → Reminder): a local notification the phone schedules by itself, no server. It doesn't ask for the exact-alarm permission, so Android may deliver it a few minutes late.
+- **No donations**: the Support section and the popup are hidden, because Google Play and the App Store don't allow sending people to pay the developer outside their billing.
+- Android's back button closes the open sheet before leaving the app. There's no service worker: the files are inside the app.
+- The app's data is separate from the website's: use Export and Import backup to move it. Android's cloud backup is off (`allowBackup="false"`), so the data stays on the phone.
+
+**Builds:** the *Android* workflow in GitHub Actions runs on every pull request and push to `main`. It always uploads `less-debug-apk`, which you can install on a phone to try (allow installing from unknown sources). When the upload key secrets exist it also uploads `less-release-aab`, the signed bundle for the Play Console. Each run's number is the `versionCode`.
+
+**Upload key** (once, on your computer; keep the file and passwords safe, you need them for every update):
+
+```bash
+keytool -genkeypair -keystore less-upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 less-upload.jks   # on macOS: base64 -i less-upload.jks
+```
+
+Then in the repo, Settings → Secrets and variables → Actions, add `ANDROID_KEYSTORE_BASE64` (the base64 output), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` (`upload`) and `ANDROID_KEY_PASSWORD`.
+
+**Building locally:** `npm ci && npm run sync` copies the web files into `www/` and then into the Android project; open `android/` in Android Studio. After changing `index.html`, run `npm run sync` again.
 
 ## Setting up the donation link
 
