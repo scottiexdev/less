@@ -97,6 +97,17 @@ h2 span { font-size: .88rem; font-weight: 600; letter-spacing: 0; text-transform
 .ctl button { width: 34px; height: 34px; border-radius: 50%; font-size: 1.1rem; background: var(--bg); }
 .ctl output { font-family: var(--serif); font-size: 1.7rem; min-width: 2.6ch; text-align: center; line-height: 1; }
 /* Money: one strip, per-tracker lines under it. */
+.times summary { list-style: none; cursor: pointer; }
+.times summary::-webkit-details-marker { display: none; }
+.times summary h2 { margin: 0; }
+.times summary h2::after { content: "▾"; margin-left: auto; transition: transform .2s; }
+.times[open] summary h2::after { transform: rotate(180deg); }
+.times[open] summary { margin-bottom: 12px; }
+.tchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.tchips span { padding: 4px 10px; border-radius: 12px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.tchips p { margin: 0; color: var(--muted); font-size: .92rem; }
+.tbins { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 10px; align-items: center; font-size: .92rem; }
+.tbins small { color: var(--muted); }
 .money { background: var(--accent-soft); color: var(--accent); border-radius: 22px; padding: 16px 20px; display: grid; gap: 6px; }
 .money .mrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 600; }
 .money .mrow b { font-family: var(--serif); font-weight: 400; font-size: 2.1rem; line-height: 1; }
@@ -358,6 +369,13 @@ form.setup { padding: 0; }
       <p class="empty" id="vEmpty" style="margin:0">Nothing logged on this day.</p>
     </section>
   </div>
+
+  <details class="panel times" id="times">
+    <summary><h2>Times <span id="tLast"></span></h2></summary>
+    <div class="tchips" id="tDay"></div>
+    <h2 style="margin-top:16px">Time of day <span>last 30 days</span></h2>
+    <div class="tbins" id="tBins"></div>
+  </details>
 
   <section class="money">
     <div class="mrow"><span id="moneySince">Saved</span><b id="saved"></b></div>
@@ -667,7 +685,8 @@ const norm = v => v && "count" in v && !("pouches" in v)
   : { pouches: v.pouches || 0, cigarettes: v.cigarettes || 0, mg: v.mg || 0, limits: { ...state.limits, ...(v.limits || {}) },
       drinks: (Array.isArray(v.drinks) ? v.drinks : []).filter(x => x && typeof x.n === "string" && x.u >= 0 && x.u <= 100).map(x => ({ n: x.n.slice(0, 60), u: +x.u })),
       dry: v.dry === true,
-      vapes: (Array.isArray(v.vapes) ? v.vapes : []).filter(x => Number.isInteger(x) && x >= 1 && x <= 6) };
+      vapes: (Array.isArray(v.vapes) ? v.vapes : []).filter(x => Number.isInteger(x) && x >= 1 && x <= 6),
+      times: Object.fromEntries(TABS.filter(m => Array.isArray(v.times?.[m])).map(m => [m, v.times[m].slice(0, 500).map(t => /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? t : null)])) };
 
 try {
   const s = JSON.parse(localStorage.getItem(LS));
@@ -693,6 +712,25 @@ const planned = (k, m) => { const p = state.plan; return !p || p.mode !== m || k
 const limitsOn = k => { const l = { ...state.limits }; for (const m of PLANS) { const t = planned(k, m); if (t != null) l[m] = t; } return l; };
 const refreshToday = () => { if (state.days[today]) state.days[today] = { ...state.days[today], limits: limitsOn(today) }; };
 
+// times[m]: one "HH:MM" per entry of mode m, in the same order (null = added later for a past day, or before times existed).
+const entries = (d, m) => m === "alcohol" ? d.drinks?.length || 0 : m === "vaping" ? d.vapes?.length || 0 : d[m] || 0;
+const stamp = (d, m) => {
+  const n = entries(d, m), t = (d.times?.[m] || []).slice(0, n - 1), now = new Date();
+  while (t.length < n - 1) t.push(null);
+  t.push(sel === today ? `${pad(now.getHours())}:${pad(now.getMinutes())}` : null);
+  d.times = { ...d.times, [m]: t };
+};
+const unstamp = (d, m, i) => { if (d.times?.[m]) d.times = { ...d.times, [m]: d.times[m].filter((_, j) => j !== i) }; };
+const BINS = [["Night", "0–6"], ["Morning", "6–12"], ["Afternoon", "12–18"], ["Evening", "18–24"]];
+function renderTimes() {
+  const m = state.mode, ts = (day().times?.[m] || []).filter(Boolean);
+  $("tLast").textContent = ts.length ? `last at ${ts.at(-1)}` : "";
+  $("tDay").innerHTML = ts.length ? ts.map(t => `<span>${t}</span>`).join("") : `<p>Nothing with a time ${sel === today ? "yet today" : "on this day"}. Times are saved for what you add today.</p>`;
+  const c = [0, 0, 0, 0];
+  for (const k of last30()) for (const t of state.days[k]?.times?.[m] || []) if (t) c[Math.min(3, Math.floor(+t.slice(0, 2) / 6))]++;
+  const tot = c.reduce((a, b) => a + b, 0);
+  $("tBins").innerHTML = BINS.map(([name, hrs], i) => `<span>${name} <small>${hrs}</small></span><div class="meter"><i style="width:${tot ? c[i] / tot * 100 : 0}%"></i></div><b>${c[i]}</b>`).join("");
+}
 const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: limitsOn(sel) };
 const $ = id => document.getElementById(id);
 
@@ -705,6 +743,7 @@ function render() {
   $("dayPick").value = sel; $("dayPick").max = today;
   $("nextDay").disabled = sel >= today;
   renderMoney();
+  renderTimes();
   for (const el of document.querySelectorAll(".nic")) el.hidden = !MODES[m];
   $("alc").hidden = $("alc2").hidden = m !== "alcohol";
   $("vape").hidden = $("vape2").hidden = m !== "vaping";
@@ -921,6 +960,7 @@ function tap(delta) {
   d[m] += delta;
   // shortcut: removing uses today's current strength, so −1 after a strength change is approximate.
   d.mg = Math.max(0, r1(d.mg + delta * state.strength[m]));
+  if (delta > 0) stamp(d, m); else unstamp(d, m, d[m]);
   if (sel === today) d.limits = limitsOn(today); // past days keep the limit they had
   state.days[sel] = d;
   render(); persist(sel, d);
@@ -955,13 +995,13 @@ function editDay(f) {
   if (sel === today) d.limits = limitsOn(today);
   state.days[sel] = d; saveLocal(); render();
 }
-const addDrink = (n, ml, abv) => editDay(d => { d.drinks = [...(d.drinks || []), { n, u: unitsOf(ml, abv) }]; d.dry = false; });
+const addDrink = (n, ml, abv) => editDay(d => { d.drinks = [...(d.drinks || []), { n, u: unitsOf(ml, abv) }]; d.dry = false; stamp(d, "alcohol"); });
 $("drinkBtns").onclick = e => { const b = e.target.closest("button"); if (b) { const [n, ml, abv] = DRINKS[b.dataset.i]; addDrink(`${n} ${abv}%`, ml, abv); } };
 $("custom").onsubmit = e => { e.preventDefault(); const ml = +$("cMl").value * VOL[state.measure][0], abv = +$("cAbv").value; addDrink(`${vol(ml)} at ${abv}%`, ml, abv); e.target.reset(); };
-$("dlog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.drinks.splice(+b.dataset.i, 1)); };
+$("dlog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => { d.drinks.splice(+b.dataset.i, 1); unstamp(d, "alcohol", +b.dataset.i); }); };
 $("dryDay").onclick = () => editDay(d => { d.dry = !d.dry; });
-$("vAdds").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => { d.vapes = [...(d.vapes || []), +b.dataset.s]; }); };
-$("vLog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => d.vapes.splice(+b.dataset.i, 1)); };
+$("vAdds").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => { d.vapes = [...(d.vapes || []), +b.dataset.s]; stamp(d, "vaping"); }); };
+$("vLog").onclick = e => { const b = e.target.closest("button"); if (b) editDay(d => { d.vapes.splice(+b.dataset.i, 1); unstamp(d, "vaping", +b.dataset.i); }); };
 $("vLimUp").onclick = () => setLimit(0.5);
 $("vLimDown").onclick = () => setLimit(-0.5);
 $("aLimUp").onclick = () => setLimit(1);

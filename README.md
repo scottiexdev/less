@@ -17,6 +17,7 @@ A tiny, private web app to cut down on nicotine and alcohol. Count your pouches 
 - **Quit plan**: on first launch (or from the *Plan* panel) enter how many you use a day and the date you want to stop by. The app lowers the daily limit in a straight line down to 0 on that date and shows each day's target on a calendar next to what you logged. You can skip it.
 - **Fix past days**: pick a day with the arrows or the date picker above the counter, or tap a bar in *This week* or a day on the plan calendar, and adjust it with +1 / −
 - 7-day averages and week-over-week change
+- **Times**: every pouch, cigarette, drink or refill you add today keeps the time you added it. The expandable *Times* panel shows today's times (and the last one, to check you already logged the one in your hand) and how the last 30 days split between night, morning, afternoon and evening. What you add for a past day has no time.
 - **Installable** and works offline
   - Android (Chrome): menu → *Add to Home screen* / *Install app*
   - iPhone / iPad (Safari): Share → *Add to Home Screen*. Do this on iOS: Safari may clear data of websites you haven't opened for 7 days, the installed app keeps it.
