@@ -17,7 +17,8 @@ jobs:
         with: { distribution: temurin, java-version: 21, cache: gradle }
       - run: npm ci && npm run sync
       - name: Debug APK, to install on a phone and try
-        run: cd android && ./gradlew assembleDebug
+        # Maven Central sometimes answers 429 on a cold cache; what was downloaded stays, so retry.
+        run: cd android && for i in 1 2 3; do ./gradlew assembleDebug && exit 0; sleep 60; done; exit 1
       - uses: actions/upload-artifact@v4
         with: { name: less-debug-apk, path: android/app/build/outputs/apk/debug/app-debug.apk }
       - name: Release bundle for Google Play
@@ -28,7 +29,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload.jks"
-          cd android && ANDROID_KEYSTORE="$RUNNER_TEMP/upload.jks" ./gradlew bundleRelease
+          cd android && for i in 1 2 3; do ANDROID_KEYSTORE="$RUNNER_TEMP/upload.jks" ./gradlew bundleRelease && exit 0; sleep 60; done; exit 1
       - uses: actions/upload-artifact@v4
         if: env.HAS_KEY == 'true'
         with: { name: less-release-aab, path: android/app/build/outputs/bundle/release/app-release.aab }
