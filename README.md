@@ -29,7 +29,7 @@ Less is published by **ScottieLabs**, the data controller under the GDPR. Contac
 - **What you log never leaves the device.** There is no server and no account. Everything is stored in your browser's `localStorage`. ScottieLabs never receives it.
 - **No third parties on load.** No cookies, no analytics, no ads. Fonts (SIL Open Font License, see `fonts/OFL.txt`) and images are served from this site.
 - **Hosting:** GitHub Pages logs visitors' IP addresses, as any web server does ([GitHub privacy statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement)).
-- **Android app:** the daily reminder is scheduled on the phone; nothing is sent. The app loads its files from the phone, not from GitHub.
+- **Android app:** the daily reminder is scheduled on the phone; nothing is sent. Tips go through Google Play. The app loads its files from the phone, not from GitHub.
 - **Donations** go through PayPal only when someone taps Donate or scans the QR code.
 - **Backups:** use **Export backup** from time to time: clearing browser data or uninstalling the browser deletes your history. **Import backup** merges a backup file back in.
 
@@ -52,7 +52,7 @@ It's plain HTML, CSS and JavaScript with no build step. Serve the folder with an
 The same `index.html` runs inside a native shell made with [Capacitor](https://capacitorjs.com) (`android/`, `capacitor.config.json`, app id `com.scottielabs.less`). In the app:
 
 - **Daily reminder** (Settings → Reminder): a local notification the phone schedules by itself, no server. It doesn't ask for the exact-alarm permission, so Android may deliver it a few minutes late.
-- **No donations**: the Support section and the popup are hidden, because Google Play and the App Store don't allow sending people to pay the developer outside their billing.
+- **Tips instead of donations**: no PayPal link, because Google Play doesn't allow paying the developer outside its billing. The Support section offers three Play Billing tips, each unlocking a badge (🌱 Seed, 🌿 Sprout, 🌳 Tree). They're one-time products, so each can be bought once and the badges come back after a reinstall. To turn them on, create in Play Console → *Monetize → In-app products* three products with ids `tip_seed`, `tip_sprout`, `tip_tree` and the prices you want (for example 1, 3 and 5 €). Until they exist the buttons stay greyed out. Play only shows them in a build installed from a Play track (internal testing is enough), not in the debug APK.
 - Android's back button closes the open sheet before leaving the app. There's no service worker: the files are inside the app.
 - The app's data is separate from the website's: use Export and Import backup to move it. Android's cloud backup is off (`allowBackup="false"`), so the data stays on the phone.
 
