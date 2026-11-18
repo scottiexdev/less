@@ -377,6 +377,12 @@ form.setup { padding: 0; }
     <div class="tbins" id="tBins"></div>
   </details>
 
+  <details class="panel times" id="awards">
+    <summary><h2>Achievements <span id="aInfo"></span></h2></summary>
+    <div class="tiers" id="aGrid"></div>
+    <p class="empty" id="aNote"></p>
+  </details>
+
   <section class="money">
     <div class="mrow"><span id="moneySince">Saved</span><b id="saved"></b></div>
     <div class="mrows" id="moneyRows"></div>
@@ -731,6 +737,33 @@ function renderTimes() {
   const tot = c.reduce((a, b) => a + b, 0);
   $("tBins").innerHTML = BINS.map(([name, hrs], i) => `<span>${name} <small>${hrs}</small></span><div class="meter"><i style="width:${tot ? c[i] / tot * 100 : 0}%"></i></div><b>${c[i]}</b>`).join("");
 }
+// Achievements: longest run of finished days (vaping: weeks) in limit, on plan, or with none used. Worked out from the log, never stored.
+// A day with nothing logged counts as none used, as for money; runs start at the first day this tracker has anything logged.
+const AWARDS = [["in", "In limit", "🎯", [3, 7, 30], [2, 4, 12]], ["plan", "On plan", "🗺️", [7, 30], [4, 12]], ["zero", "Free", "🌿", [1, 7, 30, 100], [1, 4, 12, 26]]];
+function runs(m) {
+  const wk = m === "vaping", ks = Object.keys(state.days).filter(k => entries(state.days[k], m) || (m === "alcohol" && state.days[k].dry)).sort();
+  const best = { in: 0, plan: 0, zero: 0 }, cur = { in: 0, plan: 0, zero: 0 };
+  if (!ks.length) return { best, cur };
+  const end = wk ? shift(monOf(today), -1) : shift(today, -1);
+  for (let k = wk ? monOf(ks[0]) : ks[0]; k <= end; k = shift(k, wk ? 7 : 1)) {
+    const r = state.days[k], used = wk ? weekSum(k, tanks) : m === "alcohol" ? units(r) : r?.[m] || 0;
+    const lim = r?.limits?.[m] ?? limitsOn(k)[m], pl = planned(k, m);
+    const ok = { in: used <= lim, plan: pl != null && used <= pl, zero: used === 0 };
+    for (const c in ok) { cur[c] = ok[c] ? cur[c] + 1 : 0; best[c] = Math.max(best[c], cur[c]); }
+  }
+  return { best, cur };
+}
+function renderAwards() {
+  const m = state.mode, wk = m === "vaping", { best, cur } = runs(m), u = wk ? "week" : "day";
+  let got = 0, all = 0;
+  $("aGrid").innerHTML = AWARDS.filter(([c]) => c !== "plan" || PLANS.includes(m)).flatMap(([c, name, ico, d, w]) => (wk ? w : d).map(n => {
+    const ok = best[c] >= n; got += ok; all++;
+    const label = `${n} ${u}${n > 1 ? "s" : ""} ${c === "zero" ? (m === "alcohol" ? "dry" : "free") : name.toLowerCase()}`;
+    return `<div class="tier${ok ? " got" : ""}" role="img" aria-label="${label}${ok ? ", earned" : ""}"><b>${ico}</b><span>${n} ${u}${n > 1 ? "s" : ""}</span><small>${c === "zero" && m === "alcohol" ? "Dry" : name}</small></div>`;
+  })).join("");
+  $("aInfo").textContent = `${got} of ${all}`;
+  $("aNote").textContent = `Now: ${cur.in} ${u}s in limit${PLANS.includes(m) ? `, ${cur.plan} on plan` : ""}, ${cur.zero} ${m === "alcohol" ? "dry" : "free"}. Badges count finished ${u}s in a row; a ${u} with nothing logged counts as none.`;
+}
 const day = () => state.days[sel] || { pouches: 0, cigarettes: 0, mg: 0, limits: limitsOn(sel) };
 const $ = id => document.getElementById(id);
 
@@ -744,6 +777,7 @@ function render() {
   $("nextDay").disabled = sel >= today;
   renderMoney();
   renderTimes();
+  renderAwards();
   for (const el of document.querySelectorAll(".nic")) el.hidden = !MODES[m];
   $("alc").hidden = $("alc2").hidden = m !== "alcohol";
   $("vape").hidden = $("vape2").hidden = m !== "vaping";
